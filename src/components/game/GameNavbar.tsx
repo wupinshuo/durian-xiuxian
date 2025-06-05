@@ -14,6 +14,7 @@ import {
   FaUsers,
   FaDungeon,
   FaShoppingBag,
+  FaRedo,
 } from "react-icons/fa";
 import { useGameData } from "@/store/GameDataContext";
 
@@ -26,9 +27,10 @@ interface NavItem {
 }
 
 export default function GameNavbar() {
-  const { spiritualStones, spiritGems, character } = useGameData();
+  const { spiritualStones, spiritGems, character, resetData } = useGameData();
   const pathname = usePathname();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [isRebirthModalOpen, setIsRebirthModalOpen] = useState(false);
 
   const navItems: NavItem[] = [
     { label: "主页", href: "/game", icon: <FaHome /> },
@@ -55,6 +57,12 @@ export default function GameNavbar() {
       tooltip: "暂未开放",
     },
   ];
+
+  // 处理重生确认
+  const handleRebirth = () => {
+    resetData();
+    setIsRebirthModalOpen(false);
+  };
 
   return (
     <header className="bg-gray-800 text-white">
@@ -122,6 +130,15 @@ export default function GameNavbar() {
               <FaShoppingBag />
             </Link>
 
+            {/* 重生按钮 */}
+            <button
+              onClick={() => setIsRebirthModalOpen(true)}
+              className="text-red-400 hover:text-red-300 flex items-center"
+              title="重生"
+            >
+              <FaRedo />
+            </button>
+
             {/* 移动端菜单按钮 */}
             <button
               className="md:hidden text-gray-300 focus:outline-none"
@@ -159,6 +176,32 @@ export default function GameNavbar() {
           </div>
         )}
       </nav>
+
+      {/* 重生确认模态框 */}
+      {isRebirthModalOpen && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-gray-800 p-6 rounded-lg shadow-lg max-w-md w-full">
+            <h2 className="text-xl font-bold text-red-400 mb-4">确认重生</h2>
+            <p className="mb-6">
+              重生将会清除你的所有进度，包括修为、功法、物品等，回到最初状态。此操作不可撤销，确定要重生吗？
+            </p>
+            <div className="flex justify-end space-x-4">
+              <button
+                onClick={() => setIsRebirthModalOpen(false)}
+                className="px-4 py-2 bg-gray-700 rounded hover:bg-gray-600"
+              >
+                取消
+              </button>
+              <button
+                onClick={handleRebirth}
+                className="px-4 py-2 bg-red-600 rounded hover:bg-red-700"
+              >
+                确认重生
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </header>
   );
 }

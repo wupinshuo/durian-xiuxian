@@ -9,6 +9,8 @@ import {
   Item,
   GameEvent,
   CultivationRealm,
+  ItemType,
+  ItemEffect,
 } from "@/lib/types/game";
 
 // 上下文类型定义
@@ -36,6 +38,7 @@ interface GameDataContextType {
   updateCharacterInfo: (updatedCharacter: Character) => void;
   checkForRealmUpgrade: () => boolean;
   upgradeRealm: () => boolean;
+  resetData: () => void;
 }
 
 // 创建上下文
@@ -169,7 +172,7 @@ export function GameDataProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
-  // 更新角色信息
+  /** 更新角色信息 */
   const updateCharacterInfo = (updatedCharacter: Character) => {
     setPlayerData((prev) => {
       if (!prev) return prev;
@@ -180,7 +183,7 @@ export function GameDataProvider({ children }: { children: React.ReactNode }) {
     });
   };
 
-  // 更新修为进度
+  /** 更新修为进度 */
   const updateRealmProgress = (progress: number) => {
     setPlayerData((prev) => {
       if (!prev) return prev;
@@ -194,9 +197,9 @@ export function GameDataProvider({ children }: { children: React.ReactNode }) {
     });
   };
 
-  // 增加修为进度
+  /** 增加修为进度，用于境界突破 */
   const addRealmProgress = (amount: number) => {
-    setPlayerData((prev) => {
+    setPlayerData((prev: any) => {
       if (!prev) return prev;
 
       // 计算新的修为进度
@@ -242,7 +245,7 @@ export function GameDataProvider({ children }: { children: React.ReactNode }) {
 
         // 检查是否已有类似事件，避免重复
         const hasReadyEvent = prev.events.some(
-          (e) =>
+          (e: GameEvent) =>
             e.type === "cultivation" &&
             e.title === "突破准备" &&
             Date.now() - e.timestamp < 3600000 // 1小时内
@@ -279,7 +282,7 @@ export function GameDataProvider({ children }: { children: React.ReactNode }) {
     });
   };
 
-  // 更新技能进度
+  /** 更新技能进度 */
   const updateSkillProgress = (skillId: string, progress: number) => {
     setPlayerData((prev) => {
       if (!prev) return prev;
@@ -297,7 +300,7 @@ export function GameDataProvider({ children }: { children: React.ReactNode }) {
     });
   };
 
-  // 增加技能进度
+  /** 增加技能进度 */
   const addSkillProgress = (skillId: string, amount: number) => {
     setPlayerData((prev) => {
       if (!prev) return prev;
@@ -348,29 +351,41 @@ export function GameDataProvider({ children }: { children: React.ReactNode }) {
     });
   };
 
-  // 更新灵石数量
+  /** 更新灵石数量 */
   const updateSpiritualStones = (amount: number) => {
     setPlayerData((prev) => {
       if (!prev) return prev;
       return {
         ...prev,
-        spiritualStones: Math.max(0, amount),
+        inventory: {
+          ...prev.inventory,
+          currency: {
+            ...prev.inventory.currency,
+            spiritualStones: Math.max(0, amount),
+          },
+        },
       };
     });
   };
 
-  // 更新灵玉数量
+  /** 更新灵玉数量 */
   const updateSpiritGems = (amount: number) => {
     setPlayerData((prev) => {
       if (!prev) return prev;
       return {
         ...prev,
-        spiritGems: Math.max(0, amount),
+        inventory: {
+          ...prev.inventory,
+          currency: {
+            ...prev.inventory.currency,
+            spiritGems: Math.max(0, amount),
+          },
+        },
       };
     });
   };
 
-  // 添加物品
+  /** 添加物品 */
   const addItem = (item: Item): boolean => {
     // 简单实现，实际应检查背包容量
     let success = false;
@@ -423,7 +438,7 @@ export function GameDataProvider({ children }: { children: React.ReactNode }) {
     return success;
   };
 
-  // 使用物品
+  /** 使用物品 */
   const useItem = (itemId: string): boolean => {
     let success = false;
 
@@ -456,10 +471,11 @@ export function GameDataProvider({ children }: { children: React.ReactNode }) {
       let updatedEvents = [...prev.events];
 
       // 处理丹药效果
-      if (item.type === "pill") {
+      if (item.type === ItemType.Pill) {
+        const effects = item.effects as ItemEffect[];
         // 恢复灵力
-        if (item.effects?.manaRestore) {
-          const manaRestorePercent = item.effects.manaRestore as number;
+        if (effects.length > 0 && effects[0].type === "manaRestore") {
+          const manaRestorePercent = effects[0].value as number;
           const maxMana = updatedCharacter.attributes.mana;
           const restoreAmount = Math.floor(
             (maxMana * manaRestorePercent) / 100
@@ -480,8 +496,8 @@ export function GameDataProvider({ children }: { children: React.ReactNode }) {
         }
 
         // 恢复气血
-        if (item.effects?.healthRestore) {
-          const healthRestorePercent = item.effects.healthRestore as number;
+        if (effects.length > 0 && effects[0].type === "healthRestore") {
+          const healthRestorePercent = effects[0].value as number;
           const maxHealth = updatedCharacter.attributes.health;
           const restoreAmount = Math.floor(
             (maxHealth * healthRestorePercent) / 100
@@ -517,7 +533,7 @@ export function GameDataProvider({ children }: { children: React.ReactNode }) {
     return success;
   };
 
-  // 出售物品
+  /** 出售物品 */
   const sellItem = (itemId: string): number => {
     let price = 0;
 
@@ -525,7 +541,7 @@ export function GameDataProvider({ children }: { children: React.ReactNode }) {
       if (!prev) return prev;
 
       const item = prev.inventory.items.find((item) => item.id === itemId);
-      if (!item || !item.sellable) return prev;
+      if (!item) return prev;
 
       price = item.value || 0;
 
@@ -535,14 +551,17 @@ export function GameDataProvider({ children }: { children: React.ReactNode }) {
           ...prev.inventory,
           items: prev.inventory.items.filter((i) => i.id !== itemId),
         },
-        spiritualStones: prev.spiritualStones + price,
+        currency: {
+          ...prev.inventory.currency,
+          spiritualStones: prev.inventory.currency.spiritualStones + price,
+        },
       };
     });
 
     return price;
   };
 
-  // 添加游戏事件
+  /** 添加游戏事件 */
   const addEvent = (event: GameEvent) => {
     setPlayerData((prev) => {
       if (!prev) return prev;
@@ -553,7 +572,25 @@ export function GameDataProvider({ children }: { children: React.ReactNode }) {
     });
   };
 
-  // 如果数据尚未加载完成，显示加载界面
+  /** 重置游戏数据 */
+  const resetData = () => {
+    // 重置数据
+    gameDataService.resetData();
+    // 重新加载初始数据
+    const initialData = gameDataService.getPlayerData();
+    setPlayerData(initialData);
+    // 添加重生事件
+    const rebirthEvent: GameEvent = {
+      id: crypto.randomUUID(),
+      type: "story",
+      title: "重新开始",
+      description: "你决定放弃过去，重新开始修仙之旅。",
+      timestamp: Date.now(),
+    };
+    addEvent(rebirthEvent);
+  };
+
+  /** 如果数据尚未加载完成，显示加载界面 */
   if (!isLoaded || !playerData) {
     return (
       <div className="flex items-center justify-center min-h-screen bg-gray-900 text-white">
@@ -567,15 +604,15 @@ export function GameDataProvider({ children }: { children: React.ReactNode }) {
     );
   }
 
-  // 准备上下文值
+  /** 准备上下文值 */
   const contextValue: GameDataContextType = {
     playerData,
     character: playerData.character,
     skills: playerData.skills,
     items: playerData.inventory.items,
     events: playerData.events,
-    spiritualStones: playerData.spiritualStones,
-    spiritGems: playerData.spiritGems,
+    spiritualStones: playerData.inventory.currency?.spiritualStones || 0,
+    spiritGems: playerData.inventory.currency?.spiritGems || 0,
     updateRealmProgress,
     addRealmProgress,
     updateSkillProgress,
@@ -589,6 +626,7 @@ export function GameDataProvider({ children }: { children: React.ReactNode }) {
     updateCharacterInfo,
     checkForRealmUpgrade,
     upgradeRealm,
+    resetData,
   };
 
   return (
@@ -598,7 +636,7 @@ export function GameDataProvider({ children }: { children: React.ReactNode }) {
   );
 }
 
-// 使用上下文的钩子
+/** 使用上下文的钩子 */
 export function useGameData() {
   const context = useContext(GameDataContext);
 

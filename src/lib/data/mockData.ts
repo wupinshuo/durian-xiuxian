@@ -60,6 +60,7 @@ export const mockSkills: Skill[] = [
     type: "cultivation",
     rank: SkillRank.High,
     level: 3,
+    maxLevel: 10,
     progress: 35,
     effects: [
       {
@@ -81,6 +82,7 @@ export const mockSkills: Skill[] = [
     type: "combat",
     rank: SkillRank.Middle,
     level: 2,
+    maxLevel: 10,
     progress: 68,
     effects: [
       {
@@ -102,6 +104,7 @@ export const mockSkills: Skill[] = [
     type: "auxiliary",
     rank: SkillRank.High,
     level: 1,
+    maxLevel: 10,
     progress: 12,
     effects: [
       {
@@ -137,6 +140,7 @@ export const mockItems: Item[] = [
       },
     ],
     value: 150,
+    usable: true,
   },
   {
     id: uuidv4(),
@@ -154,6 +158,7 @@ export const mockItems: Item[] = [
       },
     ],
     value: 120,
+    usable: true,
   },
   {
     id: uuidv4(),
@@ -164,6 +169,7 @@ export const mockItems: Item[] = [
     stackable: true,
     quantity: 12,
     value: 50,
+    usable: true,
   },
 ];
 
@@ -218,6 +224,7 @@ export const mockPlayerData: PlayerData = {
   inventory: {
     items: mockItems,
     capacity: 50,
+    maxSize: 50,
     currency: {
       spiritualStones: 1253,
       spiritGems: 75,

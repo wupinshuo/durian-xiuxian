@@ -3,162 +3,262 @@
  * 游戏核心类型定义
  */
 
-// 境界等级
+/** 境界等级 */
 export enum CultivationRealm {
-  QiRefining = "练气", // 练气期
-  Foundation = "筑基", // 筑基期
-  CoreFormation = "结丹", // 结丹期
-  NascentSoul = "元婴", // 元婴期
-  SpiritSevering = "化神", // 化神期
-  Void = "空劫", // 空劫期
+  /** 练气 */
+  QiRefining = "练气",
+  /** 筑基 */
+  Foundation = "筑基",
+  /** 结丹 */
+  CoreFormation = "结丹",
+  /** 元婴 */
+  NascentSoul = "元婴",
+  /** 化神 */
+  SpiritSevering = "化神",
+  /** 空劫 */
+  Void = "空劫",
 }
 
-// 境界层次
+/** 境界层次 */
 export type RealmLevel = 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11 | 12;
 
-// 灵根类型
+/** 灵根类型 */
 export enum SpiritRootType {
-  Metal = "金", // 金灵根
-  Wood = "木", // 木灵根
-  Water = "水", // 水灵根
-  Fire = "火", // 火灵根
-  Earth = "土", // 土灵根
-  Thunder = "雷", // 雷灵根
-  Wind = "风", // 风灵根
-  Ice = "冰", // 冰灵根
-  Mixed = "混合", // 混合灵根
-  Chaos = "混沌", // 混沌灵根
+  /** 金灵根 */
+  Metal = "金",
+  /** 木灵根 */
+  Wood = "木",
+  /** 水灵根 */
+  Water = "水",
+  /** 火灵根 */
+  Fire = "火",
+  /** 土灵根 */
+  Earth = "土",
+  /** 雷灵根 */
+  Thunder = "雷",
+  /** 风灵根 */
+  Wind = "风",
+  /** 冰灵根 */
+  Ice = "冰",
+  /** 混合灵根 */
+  Mixed = "混合",
+  /** 混沌灵根 */
+  Chaos = "混沌",
 }
 
-// 灵根资质
+/** 灵根资质 */
 export enum SpiritRootQuality {
-  Poor = "下等", // 下等资质
-  Common = "中等", // 中等资质
-  Good = "上等", // 上等资质
-  Excellent = "极品", // 极品资质
-  Heavenly = "天灵", // 天灵资质
+  /** 下等资质 */
+  Poor = "下等",
+  /** 中等资质 */
+  Common = "中等",
+  /** 上等资质 */
+  Good = "上等",
+  /** 极品资质 */
+  Excellent = "极品",
+  /** 天灵资质 */
+  Heavenly = "天灵",
 }
 
-// 道行类型
+/** 道行类型 */
 export enum CultivationPath {
-  Righteous = "正道", // 正道
-  Neutral = "中立", // 中立
-  Evil = "魔道", // 魔道
+  /** 正道 */
+  Righteous = "正道",
+  /** 中立 */
+  Neutral = "中立",
+  /** 魔道 */
+  Evil = "魔道",
 }
 
-// 功法品级
+/** 功法品级 */
 export enum SkillRank {
-  Mortal = "凡品", // 凡品
-  Low = "下品", // 下品
-  Middle = "中品", // 中品
-  High = "上品", // 上品
-  Supreme = "极品", // 极品
-  Heavenly = "天级", // 天级
-  Immortal = "仙级", // 仙级
+  /** 凡品 */
+  Mortal = "凡品",
+  /** 下品 */
+  Low = "下品",
+  /** 中品 */
+  Middle = "中品",
+  /** 上品 */
+  High = "上品",
+  /** 极品 */
+  Supreme = "极品",
+  /** 天级 */
+  Heavenly = "天级",
+  /** 仙级 */
+  Immortal = "仙级",
 }
 
-// 角色基本属性
+/** 角色基本属性 */
 export interface CharacterAttributes {
-  attack: number; // 攻击
-  defense: number; // 防御
-  spirit: number; // 灵力
-  speed: number; // 速度
-  health: number; // 气血最大值
-  mana: number; // 灵力最大值
-  healthCurrent: number; // 当前气血
-  manaCurrent: number; // 当前灵力
-  insight: number; // 悟性
+  /** 攻击 */
+  attack: number;
+  /** 防御 */
+  defense: number;
+  /** 灵力 */
+  spirit: number;
+  /** 速度 */
+  speed: number;
+  /** 气血最大值 */
+  health: number;
+  /** 灵力最大值 */
+  mana: number;
+  /** 当前气血 */
+  healthCurrent: number;
+  /** 当前灵力 */
+  manaCurrent: number;
+  /** 悟性 */
+  insight: number;
 }
 
-// 角色信息
+/** 角色信息 */
 export interface Character {
   id: string;
-  name: string; // 角色名称
-  avatar: string; // 角色头像
-  realm: CultivationRealm; // 境界
-  realmLevel: RealmLevel; // 境界层次
-  realmProgress: number; // 境界修炼进度（0-100%）
-  sect?: string; // 所属门派
-  sectPosition?: string; // 门派职位
-  age: number; // 年龄
-  lifespan: number; // 寿元
-  spiritRoots: SpiritRootType[]; // 灵根
-  spiritRootQuality: SpiritRootQuality; // 灵根资质
-  cultivationPath: CultivationPath; // 修炼道路
-  attributes: CharacterAttributes; // 角色属性
+  /** 角色名称 */
+  name: string;
+  /** 角色头像 */
+  avatar: string;
+  /** 境界 */
+  realm: CultivationRealm;
+  /** 境界层次 */
+  realmLevel: RealmLevel;
+  /** 境界修炼进度（0-100%） */
+  realmProgress: number;
+  /** 所属门派 */
+  sect?: string;
+  /** 门派职位 */
+  sectPosition?: string;
+  /** 年龄 */
+  age: number;
+  /** 寿元 */
+  lifespan: number;
+  /** 灵根 */
+  spiritRoots: SpiritRootType[];
+  /** 灵根资质 */
+  spiritRootQuality: SpiritRootQuality;
+  /** 修炼道路 */
+  cultivationPath: CultivationPath;
+  /** 角色属性 */
+  attributes: CharacterAttributes;
 }
 
-// 功法类型
+/** 功法类型 */
 export interface Skill {
   id: string;
-  name: string; // 功法名称
-  description: string; // 功法描述
-  type: "cultivation" | "combat" | "auxiliary"; // 功法类型: 修炼功法、战斗功法、辅助功法
-  rank: SkillRank; // 功法品级
-  level: number; // 功法等级
-  progress: number; // 修炼进度（0-100%）
-  effects: SkillEffect[]; // 功法效果
+  /** 功法名称 */
+  name: string;
+  /** 功法描述 */
+  description: string;
+  /** 功法类型: 修炼功法、战斗功法、辅助功法 */
+  type: "cultivation" | "combat" | "auxiliary";
+  /** 功法品级 */
+  rank: SkillRank;
+  /** 功法等级 */
+  level: number;
+  /** 最大可修炼层级 */
+  maxLevel: number;
+  /** 修炼进度（0-100%） */
+  progress: number;
+  /** 功法效果 */
+  effects: SkillEffect[];
 }
 
-// 功法效果
+/** 功法效果 */
 export interface SkillEffect {
-  type: string; // 效果类型
-  value: number; // 效果数值
-  description: string; // 效果描述
+  /** 效果类型 */
+  type: string;
+  /** 效果数值 */
+  value: number;
+  /** 效果描述 */
+  description: string;
 }
 
-// 道具类型
+/** 物品类型 */
 export enum ItemType {
-  Pill = "丹药", // 丹药
-  Weapon = "法器", // 法器
-  Artifact = "法宝", // 法宝
-  Material = "材料", // 材料
-  Talisman = "符箓", // 符箓
-  Quest = "任务物品", // 任务物品
+  /** 丹药 */
+  Pill = "丹药",
+  /** 法器 */
+  Weapon = "法器",
+  /** 法宝 */
+  Artifact = "法宝",
+  /** 材料 */
+  Material = "材料",
+  /** 符箓 */
+  Talisman = "符箓",
+  /** 任务物品 */
+  Quest = "任务物品",
 }
 
-// 物品
+/** 物品 */
 export interface Item {
   id: string;
-  name: string; // 物品名称
-  description: string; // 物品描述
-  type: ItemType; // 物品类型
-  rank: SkillRank; // 物品品级
-  stackable: boolean; // 是否可堆叠
-  quantity: number; // 数量
-  effects?: ItemEffect[]; // 物品效果
-  value: number; // 价值（灵石）
+  /** 物品名称 */
+  name: string;
+  /** 物品描述 */
+  description: string;
+  /** 物品类型 */
+  type: ItemType;
+  /** 物品品级 */
+  rank: SkillRank;
+  /** 是否可堆叠 */
+  stackable: boolean;
+  /** 数量 */
+  quantity: number;
+  /** 物品效果 */
+  effects?: ItemEffect[];
+  /** 价值（灵石） */
+  value: number;
+  /** 是否可使用 */
+  usable: boolean;
 }
 
-// 物品效果
+/** 物品效果 */
 export interface ItemEffect {
-  type: string; // 效果类型
-  value: number; // 效果数值
-  duration?: number; // 持续时间（秒）
-  description: string; // 效果描述
+  /** 效果类型 */
+  type: string;
+  /** 效果数值 */
+  value: number;
+  /** 持续时间（秒） */
+  duration?: number;
+  /** 效果描述 */
+  description: string;
 }
 
-// 游戏事件
+/** 游戏事件 */
 export interface GameEvent {
   id: string;
-  type: string; // 事件类型
-  title: string; // 事件标题
-  description: string; // 事件描述
-  timestamp: number; // 事件时间戳
-  effects?: any[]; // 事件效果
+  /** 事件类型 */
+  type: string;
+  /** 事件标题 */
+  title: string;
+  /** 事件描述 */
+  description: string;
+  /** 事件时间戳 */
+  timestamp: number;
+  /** 事件效果 */
+  effects?: any[];
 }
 
-// 玩家完整数据
+/** 玩家完整数据 */
 export interface PlayerData {
-  character: Character; // 角色信息
-  skills: Skill[]; // 已学功法
+  /** 角色信息 */
+  character: Character;
+  /** 已学功法 */
+  skills: Skill[];
   inventory: {
-    items: Item[]; // 背包物品
-    capacity: number; // 背包容量
+    /** 背包物品 */
+    items: Item[];
+    /** 背包容量 */
+    capacity: number;
+    /** 背包最大容量 */
+    maxSize: number;
+    /** 货币 */
     currency: {
-      spiritualStones: number; // 灵石
-      spiritGems: number; // 灵玉
+      /** 灵石 */
+      spiritualStones: number;
+      /** 灵玉 */
+      spiritGems: number;
     };
   };
-  events: GameEvent[]; // 事件记录
+  /** 事件记录 */
+  events: GameEvent[];
 }

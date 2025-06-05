@@ -18,6 +18,7 @@ import {
   CultivationPath,
   RealmLevel,
   SkillRank,
+  ItemEffect,
 } from "@/lib/types/game";
 
 // 存储键
@@ -100,14 +101,26 @@ export class GameDataService {
    * 获取玩家灵石数量
    */
   getSpiritualStones(): number {
-    return this.getPlayerData().spiritualStones;
+    const playerData = this.getPlayerData();
+    // 适配新的PlayerData结构
+    if ("inventory" in playerData && "currency" in playerData.inventory) {
+      return playerData.inventory.currency.spiritualStones;
+    }
+    // 兼容旧结构
+    return (playerData as any).spiritualStones || 0;
   }
 
   /**
    * 获取玩家灵玉数量
    */
   getSpiritGems(): number {
-    return this.getPlayerData().spiritGems;
+    const playerData = this.getPlayerData();
+    // 适配新的PlayerData结构
+    if ("inventory" in playerData && "currency" in playerData.inventory) {
+      return playerData.inventory.currency.spiritGems;
+    }
+    // 兼容旧结构
+    return (playerData as any).spiritGems || 0;
   }
 
   /**
@@ -222,7 +235,13 @@ export class GameDataService {
    */
   updateSpiritualStones(amount: number): void {
     const data = this.getPlayerData();
-    data.spiritualStones = Math.max(0, amount);
+    // 适配新的PlayerData结构
+    if ("inventory" in data && "currency" in data.inventory) {
+      data.inventory.currency.spiritualStones = Math.max(0, amount);
+    } else {
+      // 兼容旧结构
+      (data as any).spiritualStones = Math.max(0, amount);
+    }
     this.savePlayerData(data);
   }
 
@@ -231,7 +250,13 @@ export class GameDataService {
    */
   updateSpiritGems(amount: number): void {
     const data = this.getPlayerData();
-    data.spiritGems = Math.max(0, amount);
+    // 适配新的PlayerData结构
+    if ("inventory" in data && "currency" in data.inventory) {
+      data.inventory.currency.spiritGems = Math.max(0, amount);
+    } else {
+      // 兼容旧结构
+      (data as any).spiritGems = Math.max(0, amount);
+    }
     this.savePlayerData(data);
   }
 
@@ -299,48 +324,54 @@ export class GameDataService {
    */
   private applyItemEffect(data: PlayerData, item: Item): void {
     // 这里只是简单实现，实际应该根据物品类型应用不同效果
-    if (item.type === "pill") {
-      if (item.effects?.manaRestore) {
-        // 恢复灵力
-        const manaRestorePercent = item.effects.manaRestore as number;
-        const maxMana = data.character.attributes.mana;
-        const restoreAmount = Math.floor((maxMana * manaRestorePercent) / 100);
+    if (item.type === ItemType.Pill) {
+      // 物品效果
+      const effects = item.effects;
+      if (effects) {
+        effects.forEach((effect) => {
+          if (effect.type === "manaRestore") {
+            // 恢复灵力
+            const manaRestorePercent = effect.value as number;
+            const maxMana = data.character.attributes.mana;
+            const restoreAmount = Math.floor(
+              (maxMana * manaRestorePercent) / 100
+            );
 
-        data.character.attributes.manaCurrent = Math.min(
-          maxMana,
-          data.character.attributes.manaCurrent + restoreAmount
-        );
+            data.character.attributes.manaCurrent = Math.min(
+              maxMana,
+              data.character.attributes.manaCurrent + restoreAmount
+            );
 
-        // 添加使用物品事件
-        this.addEvent({
-          id: crypto.randomUUID(),
-          type: "item",
-          title: "使用物品",
-          description: `使用了${item.name}，恢复了${restoreAmount}点灵力。`,
-          timestamp: Date.now(),
-        });
-      }
+            // 添加使用物品事件
+            this.addEvent({
+              id: crypto.randomUUID(),
+              type: "item",
+              title: "使用物品",
+              description: `使用了${item.name}，恢复了${restoreAmount}点灵力。`,
+              timestamp: Date.now(),
+            });
+          } else if (effect.type === "healthRestore") {
+            // 恢复生命值
+            const healthRestorePercent = effect.value as number;
+            const maxHealth = data.character.attributes.health;
+            const restoreAmount = Math.floor(
+              (maxHealth * healthRestorePercent) / 100
+            );
 
-      if (item.effects?.healthRestore) {
-        // 恢复生命值
-        const healthRestorePercent = item.effects.healthRestore as number;
-        const maxHealth = data.character.attributes.health;
-        const restoreAmount = Math.floor(
-          (maxHealth * healthRestorePercent) / 100
-        );
+            data.character.attributes.healthCurrent = Math.min(
+              maxHealth,
+              data.character.attributes.healthCurrent + restoreAmount
+            );
 
-        data.character.attributes.healthCurrent = Math.min(
-          maxHealth,
-          data.character.attributes.healthCurrent + restoreAmount
-        );
-
-        // 添加使用物品事件
-        this.addEvent({
-          id: crypto.randomUUID(),
-          type: "item",
-          title: "使用物品",
-          description: `使用了${item.name}，恢复了${restoreAmount}点气血。`,
-          timestamp: Date.now(),
+            // 添加使用物品事件
+            this.addEvent({
+              id: crypto.randomUUID(),
+              type: "item",
+              title: "使用物品",
+              description: `使用了${item.name}，恢复了${restoreAmount}点气血。`,
+              timestamp: Date.now(),
+            });
+          }
         });
       }
     }
@@ -351,15 +382,66 @@ export class GameDataService {
    */
   addEvent(event: GameEvent): void {
     const data = this.getPlayerData();
-    data.events.unshift(event);
+    // 物品效果
+    const effects = event.effects as ItemEffect[];
+    if (effects.length > 0 && effects[0].type === "manaRestore") {
+      // 恢复灵力
+      const manaRestorePercent = effects[0].value as number;
+      const maxMana = data.character.attributes.mana;
+      const restoreAmount = Math.floor((maxMana * manaRestorePercent) / 100);
 
-    // 只保留最近的50条事件
-    if (data.events.length > 50) {
-      data.events = data.events.slice(0, 50);
+      data.character.attributes.manaCurrent = Math.min(
+        maxMana,
+        data.character.attributes.manaCurrent + restoreAmount
+      );
+
+      // 添加使用物品事件
+      this.addEvent({
+        id: crypto.randomUUID(),
+        type: "item",
+        title: "使用物品",
+        description: `使用了${event.title}，恢复了${restoreAmount}点灵力。`,
+        timestamp: Date.now(),
+      });
     }
+    if (effects.length > 0 && effects[0].type === "healthRestore") {
+      // 恢复生命值
+      const healthRestorePercent = effects[0].value as number;
+      const maxHealth = data.character.attributes.health;
+      const restoreAmount = Math.floor(
+        (maxHealth * healthRestorePercent) / 100
+      );
 
-    this.savePlayerData(data);
+      data.character.attributes.healthCurrent = Math.min(
+        maxHealth,
+        data.character.attributes.healthCurrent + restoreAmount
+      );
+
+      // 添加使用物品事件
+      this.addEvent({
+        id: crypto.randomUUID(),
+        type: "item",
+        title: "使用物品",
+        description: `使用了${event.title}，恢复了${restoreAmount}点气血。`,
+        timestamp: Date.now(),
+      });
+    }
   }
+
+  // /**
+  //  * 添加事件记录
+  //  */
+  // addEvent(event: GameEvent): void {
+  //   const data = this.getPlayerData();
+  //   data.events.unshift(event);
+
+  //   // 只保留最近的50条事件
+  //   if (data.events.length > 50) {
+  //     data.events = data.events.slice(0, 50);
+  //   }
+
+  //   this.savePlayerData(data);
+  // }
 
   /**
    * 重置游戏数据（慎用）
@@ -376,15 +458,15 @@ export class GameDataService {
       character: this.getInitialCharacter(),
       skills: this.getInitialSkills(),
       inventory: {
+        capacity: 20,
+        currency: {
+          spiritualStones: 100,
+          spiritGems: 5,
+        },
         maxSize: 20,
         items: this.getInitialItems(),
       },
-      spiritualStones: 100,
-      spiritGems: 5,
       events: this.getInitialEvents(),
-      quests: [],
-      statistics: {},
-      settings: {},
     };
   }
 
@@ -398,7 +480,6 @@ export class GameDataService {
       realmLevel: 1,
       realmProgress: 0,
       age: 16,
-      wisdom: 30,
       lifespan: 100,
       attributes: {
         attack: 10,
@@ -409,9 +490,11 @@ export class GameDataService {
         healthCurrent: 100,
         mana: 50,
         manaCurrent: 50,
+        insight: 10,
       },
-      talents: ["锐意进取"], // 初始天赋
-      appearance: "相貌平平", // 初始外貌
+      spiritRoots: [SpiritRootType.Wood],
+      spiritRootQuality: SpiritRootQuality.Poor,
+      cultivationPath: CultivationPath.Righteous,
     };
   }
 
@@ -423,51 +506,66 @@ export class GameDataService {
         name: "紫霄玄功",
         description: "青云门入门功法，修炼可提升灵力和修为。",
         type: "cultivation",
-        rarity: "uncommon",
-        element: "无",
+        rank: SkillRank.Low,
         level: 1,
         progress: 0,
         maxLevel: 9,
-        effects: {
-          spiritBonus: 5,
-          cultivationSpeed: 10,
-        },
-        learningDifficulty: 30,
-        unlocked: true,
+        effects: [
+          {
+            type: "spiritBonus",
+            value: 5,
+            description: "增加灵力",
+          },
+          {
+            type: "cultivationSpeed",
+            value: 10,
+            description: "增加修炼速度",
+          },
+        ],
       },
       {
         id: crypto.randomUUID(),
         name: "八荒剑诀",
         description: "剑修入门功法，修炼可提高攻击和速度。",
         type: "combat",
-        rarity: "common",
-        element: "风",
+        rank: SkillRank.Low,
         level: 1,
         progress: 0,
         maxLevel: 7,
-        effects: {
-          attackBonus: 8,
-          speedBonus: 5,
-        },
-        learningDifficulty: 40,
-        unlocked: true,
+        effects: [
+          {
+            type: "attackBonus",
+            value: 8,
+            description: "增加攻击力",
+          },
+          {
+            type: "speedBonus",
+            value: 5,
+            description: "增加速度",
+          },
+        ],
       },
       {
         id: crypto.randomUUID(),
         name: "金刚不灭体",
         description: "炼体功法，提高体魄和防御。",
-        type: "body",
-        rarity: "uncommon",
-        element: "土",
+        type: "cultivation",
+        rank: SkillRank.Low,
         level: 1,
         progress: 0,
         maxLevel: 5,
-        effects: {
-          healthBonus: 15,
-          defenseBonus: 10,
-        },
-        learningDifficulty: 50,
-        unlocked: true,
+        effects: [
+          {
+            type: "healthBonus",
+            value: 15,
+            description: "增加气血",
+          },
+          {
+            type: "defenseBonus",
+            value: 10,
+            description: "增加防御",
+          },
+        ],
       },
     ];
   }
@@ -479,34 +577,38 @@ export class GameDataService {
         id: crypto.randomUUID(),
         name: "凝气丹",
         description: "服用后可提升修炼速度30%，持续4小时。",
-        type: "pill",
-        rarity: "common",
-        effects: {
-          cultivationSpeedBonus: 30,
-          duration: 14400, // 4小时(秒)
-        },
+        type: ItemType.Pill,
+        rank: SkillRank.Low,
+        effects: [
+          {
+            type: "cultivationSpeedBonus",
+            value: 30,
+            description: "增加修炼速度",
+            duration: 14400, // 4小时(秒)
+          },
+        ],
         quantity: 3,
         value: 50,
         usable: true,
-        sellable: true,
         stackable: true,
-        icon: "pill-blue",
       },
       {
         id: crypto.randomUUID(),
         name: "回气丹",
         description: "服用后立即恢复25%的灵力。",
-        type: "pill",
-        rarity: "common",
-        effects: {
-          manaRestore: 25, // 百分比
-        },
+        type: ItemType.Pill,
+        rank: SkillRank.Low,
+        effects: [
+          {
+            type: "manaRestore",
+            value: 25, // 百分比
+            description: "恢复灵力",
+          },
+        ],
         quantity: 2,
         value: 30,
         usable: true,
-        sellable: true,
         stackable: true,
-        icon: "pill-green",
       },
     ];
   }

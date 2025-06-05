@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 // 修炼境界枚举
 export enum CultivationRealm {
   QiRefining = "练气",

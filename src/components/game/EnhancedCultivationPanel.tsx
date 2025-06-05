@@ -5,6 +5,7 @@ import Image from "next/image";
 import { useGameData } from "@/store/GameDataContext";
 import { FaPlay, FaStop, FaBolt, FaFlask, FaArrowUp } from "react-icons/fa";
 import { motion } from "framer-motion";
+import { Skill as GameSkill } from "@/lib/types/game";
 
 export default function EnhancedCultivationPanel() {
   const {
@@ -19,8 +20,6 @@ export default function EnhancedCultivationPanel() {
 
   const [isCultivating, setIsCultivating] = useState(false);
   const [selectedSkillId, setSelectedSkillId] = useState<string | null>(null);
-  const [progressInterval, setProgressInterval] =
-    useState<NodeJS.Timeout | null>(null);
   const [showBreakthroughEffect, setShowBreakthroughEffect] = useState(false);
   const [cultivationStatus, setCultivationStatus] = useState<string | null>(
     "开始修炼以提升修为，点击下方按钮"
@@ -34,7 +33,6 @@ export default function EnhancedCultivationPanel() {
     character.realmProgress
   );
   const [localSkillProgress, setLocalSkillProgress] = useState(0);
-  const [lastUpdateTime, setLastUpdateTime] = useState(0);
 
   // 用于修炼进度更新的随机时间
   const minUpdateTime = 1000; // 1秒
@@ -80,7 +78,7 @@ export default function EnhancedCultivationPanel() {
   useEffect(() => {
     if (skills.length > 0 && !selectedSkillId) {
       const cultivationSkill =
-        skills.find((s) => s.type === "cultivation") || skills[0];
+        skills.find((s: GameSkill) => s.type === "cultivation") || skills[0];
       setSelectedSkillId(cultivationSkill.id);
     }
   }, [skills, selectedSkillId]);
@@ -95,7 +93,9 @@ export default function EnhancedCultivationPanel() {
   }, []);
 
   // 当前选中的功法
-  const selectedSkill = skills?.find((skill) => skill.id === selectedSkillId);
+  const selectedSkill = skills?.find(
+    (skill: GameSkill) => skill.id === selectedSkillId
+  );
 
   // 计算修炼效率（这里简化处理）
   const cultivationEfficiency = 120; // 120%的修炼效率
@@ -186,7 +186,6 @@ export default function EnhancedCultivationPanel() {
 
         // 更新计时器和最后更新时间
         lastUpdateTimeRef.current = now;
-        setLastUpdateTime(now); // 用于触发重渲染
         nextUpdateTimeRef.current = getRandomTime();
       }
     }, 100); // 每100毫秒检查一次，确保UI及时更新
@@ -275,7 +274,7 @@ export default function EnhancedCultivationPanel() {
 
     // 尝试突破
     setTimeout(() => {
-      const success = upgradeRealm();
+      upgradeRealm();
 
       // 3秒后隐藏特效
       setTimeout(() => {
