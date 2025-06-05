@@ -3,6 +3,7 @@
 import React, { useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import Image from "next/image";
 import {
   FaCoins,
   FaGem,
@@ -69,8 +70,22 @@ export default function GameNavbar() {
       <nav className="container mx-auto px-4 py-3">
         <div className="flex justify-between items-center">
           <div className="flex items-center">
-            <Link href="/game" className="text-xl font-bold mr-6">
-              榴莲修仙
+            <Link href="/game" className="flex items-center mr-8">
+              <div className="flex-shrink-0 w-10 h-10 mr-3 flex items-center">
+                <Image
+                  src="/durian_logo.svg"
+                  alt="榴莲修仙"
+                  width={40}
+                  height={40}
+                  className="object-contain"
+                />
+              </div>
+              <div className="flex flex-col">
+                <span className="text-2xl font-bold text-blue-400">
+                  榴莲修仙
+                </span>
+                <span className="text-xs text-gray-400">踏上修真之路</span>
+              </div>
             </Link>
 
             {/* 桌面导航 */}
