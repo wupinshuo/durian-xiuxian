@@ -25,6 +25,9 @@ COPY --from=deps /app/node_modules ./node_modules
 # 再复制其他源码
 COPY . .
 
+# 安装 pnpm
+RUN npm install -g pnpm@9.15.1 --force && pnpm config set registry https://registry.npmmirror.com
+
 RUN pnpm build
 
 # 运行阶段
