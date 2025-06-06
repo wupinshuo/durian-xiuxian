@@ -1,8 +1,20 @@
 {
   "name": "durian-xiuxian",
   "version": "0.1.0",
-  "private": true,
+  "private": false,
   "description": "榴莲修仙 - 踏上修真之路",
+  "keywords": [
+    "修仙",
+    "修真",
+    "修仙游戏",
+    "修真游戏",
+    "durian",
+    "榴莲修仙",
+    "修仙游戏推荐",
+    "网页修仙",
+    "文字修仙",
+    "文字游戏"
+  ],
   "author": "tushan",
   "scripts": {
     "dev": "next dev --turbopack",

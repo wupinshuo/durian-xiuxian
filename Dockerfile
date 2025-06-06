@@ -1,0 +1,41 @@
+# 依赖安装阶段
+FROM node:20-alpine AS deps
+
+WORKDIR /app
+
+# 只复制用于安装的必要文件
+COPY package.json pnpm-lock.yaml .npmrc ./
+
+RUN pnpm install
+
+# 构建阶段
+FROM node:20-alpine AS builder
+
+WORKDIR /app
+
+# 先复制 node_modules
+COPY --from=deps /app/node_modules ./node_modules
+
+# 再复制其他源码
+COPY . .
+
+RUN pnpm build
+
+# 运行阶段
+FROM node:20-alpine AS runner
+
+WORKDIR /app
+
+ENV NODE_ENV production
+
+# 从builder阶段复制构建后的产物
+COPY --from=builder /app ./
+
+# USER nextjs
+
+EXPOSE 3001
+
+ENV PORT 3001
+
+CMD ["node_modules/.bin/next", "start"]
+
