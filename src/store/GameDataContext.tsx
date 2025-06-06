@@ -208,6 +208,11 @@ export function GameDataProvider({ children }: { children: React.ReactNode }) {
       let newRealmLevel = prev.character.realmLevel;
       const newRealm = prev.character.realm;
 
+      // 如果修为进度小于0，则设置为0
+      if (newProgress < 0) {
+        newProgress = 0;
+      }
+
       // 如果达到100%，且不是巅峰层级，自动升级层级
       if (newProgress >= 100 && newRealmLevel < 12) {
         newRealmLevel += 1;
@@ -249,7 +254,7 @@ export function GameDataProvider({ children }: { children: React.ReactNode }) {
           (e: GameEvent) =>
             e.type === "cultivation" &&
             e.title === "突破准备" &&
-            Date.now() - e.timestamp < 3600000 // 1小时内
+            Date.now() - e.timestamp < 600000 // 10分钟内
         );
 
         if (hasReadyEvent) {

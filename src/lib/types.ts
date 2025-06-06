@@ -45,7 +45,7 @@ export interface Character {
   name: string;
   avatar: string; // 头像图片路径
   realm: CultivationRealm; // 境界
-  realmLevel: number; // 境界层级（1-12）
+  realmLevel: number; // 境界层级（1-5）
   realmProgress: number; // 修为进度（0-100%）
   sect?: string; // 门派
   sectPosition?: string; // 门派职位
@@ -65,7 +65,7 @@ export interface Skill {
   type: SkillType;
   rarity: SkillRarity;
   element?: string; // 属性：金、木、水、火、土、风、雷等
-  level: number; // 功法层级（1-9）
+  level: number; // 功法层级（1-7）
   progress: number; // 修炼进度（0-100%）
   maxLevel: number; // 最大可修炼层级
   effects: {

@@ -60,7 +60,7 @@ export const mockSkills: Skill[] = [
     type: "cultivation",
     rank: SkillRank.High,
     level: 3,
-    maxLevel: 10,
+    maxLevel: 7,
     progress: 35,
     effects: [
       {
@@ -82,7 +82,7 @@ export const mockSkills: Skill[] = [
     type: "combat",
     rank: SkillRank.Middle,
     level: 2,
-    maxLevel: 10,
+    maxLevel: 7,
     progress: 68,
     effects: [
       {
@@ -104,7 +104,7 @@ export const mockSkills: Skill[] = [
     type: "auxiliary",
     rank: SkillRank.High,
     level: 1,
-    maxLevel: 10,
+    maxLevel: 7,
     progress: 12,
     effects: [
       {

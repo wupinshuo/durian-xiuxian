@@ -120,11 +120,11 @@ export default function EnhancedCultivationPanel() {
     const intervalId = setInterval(() => {
       const now = Date.now();
       if (now - lastUpdateTimeRef.current >= nextUpdateTimeRef.current) {
-        // 随机判断是否走火入魔（10%概率）
-        const isDeviation = Math.random() < 0.1;
+        // 随机判断是否走火入魔（5%概率）
+        const isDeviation = Math.random() < 0.05;
 
         if (isDeviation) {
-          // 走火入魔，修为倒退
+          // 走火入魔，修为倒退，灵力受损，不能为负数，且不能超过100%
           const decreaseAmount = -0.3;
           addRealmProgress(decreaseAmount);
           // 更新本地状态，立即反映到UI

@@ -16,7 +16,7 @@ export default function CultivationPage() {
   const enhancedSkills: UISkill[] = skills.map((skill: GameSkill) => {
     // 转换effects从SkillEffect[]到{[key: string]: number}
     const convertedEffects: { [key: string]: number } = {};
-    console.log(skill.effects);
+    // console.log(skill.effects);
     if (skill.effects) {
       skill.effects.forEach((effect: SkillEffect) => {
         convertedEffects[effect.type] = effect.value;

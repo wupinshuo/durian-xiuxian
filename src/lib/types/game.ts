@@ -15,12 +15,16 @@ export enum CultivationRealm {
   NascentSoul = "元婴",
   /** 化神 */
   SpiritSevering = "化神",
-  /** 空劫 */
-  Void = "空劫",
+  /** 炼虚 */
+  Void = "炼虚",
+  /** 合体 */
+  Integration = "合体",
+  /** 大乘 */
+  Ascension = "大乘",
 }
 
 /** 境界层次 */
-export type RealmLevel = 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11 | 12;
+export type RealmLevel = 1 | 2 | 3 | 4 | 5;
 
 /** 灵根类型 */
 export enum SpiritRootType {

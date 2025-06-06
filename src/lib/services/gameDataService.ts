@@ -24,9 +24,116 @@ import { generateUUID } from "@/lib/utils";
 
 // 存储键
 const STORAGE_KEY = "durian_xiuxian_game_data";
+// 加密密钥，在实际应用中可以使用更复杂的密钥生成方法
+const ENCRYPTION_KEY = "durian_xiuxian_secret_key_2024";
+// 签名密钥
+const SIGNATURE_KEY = "durian_xiuxian_signature_2024";
 
 // 默认头像
 const DEFAULT_AVATAR = "/avatars/default.png";
+
+/**
+ * 使用AES加密数据
+ * @param data 要加密的数据
+ * @returns 加密后的字符串
+ */
+function encryptData(data: any): string {
+  try {
+    // 将数据转换为JSON字符串
+    const jsonString = JSON.stringify(data);
+
+    // 计算数据签名
+    const signature = generateSignature(jsonString);
+
+    // 将数据和签名打包在一起
+    const payload = {
+      data: jsonString,
+      signature: signature,
+      timestamp: Date.now(),
+    };
+
+    // 简单加密实现，使用Base64和异或运算
+    const payloadStr = JSON.stringify(payload);
+    let encrypted = "";
+    for (let i = 0; i < payloadStr.length; i++) {
+      const charCode =
+        payloadStr.charCodeAt(i) ^
+        ENCRYPTION_KEY.charCodeAt(i % ENCRYPTION_KEY.length);
+      encrypted += String.fromCharCode(charCode);
+    }
+
+    // 安全处理Unicode字符串的Base64编码
+    return btoa(
+      encodeURIComponent(encrypted).replace(/%([0-9A-F]{2})/g, (_, p1) =>
+        String.fromCharCode(parseInt(p1, 16))
+      )
+    );
+  } catch (error) {
+    console.error("数据加密失败:", error);
+    return "";
+  }
+}
+
+/**
+ * 解密数据
+ * @param encryptedData 加密的数据字符串
+ * @returns 解密后的数据对象，如果解密失败则返回null
+ */
+function decryptData(encryptedData: string): any {
+  try {
+    // 安全解码Base64
+    const rawStr = atob(encryptedData);
+    const result = decodeURIComponent(
+      Array.from(
+        rawStr,
+        (c) => "%" + ("00" + c.charCodeAt(0).toString(16)).slice(-2)
+      ).join("")
+    );
+
+    // 解密
+    let decrypted = "";
+    for (let i = 0; i < result.length; i++) {
+      const charCode =
+        result.charCodeAt(i) ^
+        ENCRYPTION_KEY.charCodeAt(i % ENCRYPTION_KEY.length);
+      decrypted += String.fromCharCode(charCode);
+    }
+
+    // 解析payload
+    const payload = JSON.parse(decrypted);
+
+    // 验证签名
+    const calculatedSignature = generateSignature(payload.data);
+    if (calculatedSignature !== payload.signature) {
+      console.error("数据签名验证失败，可能被篡改");
+      return null;
+    }
+
+    // 解析原始数据
+    return JSON.parse(payload.data);
+  } catch (error) {
+    console.error("数据解密失败:", error);
+    return null;
+  }
+}
+
+/**
+ * 生成数据签名
+ * @param data 要签名的数据
+ * @returns 数据签名
+ */
+function generateSignature(data: string): string {
+  // 简单的签名实现，使用字符串和签名密钥计算哈希值
+  let signature = 0;
+  const stringToHash = data + SIGNATURE_KEY;
+
+  for (let i = 0; i < stringToHash.length; i++) {
+    signature = (signature << 5) - signature + stringToHash.charCodeAt(i);
+    signature = signature & signature; // 转换为32位整数
+  }
+
+  return signature.toString(16);
+}
 
 /**
  * 提供对游戏数据的操作方法
@@ -50,7 +157,14 @@ export class GameDataService {
     const savedData = localStorage.getItem(STORAGE_KEY);
     if (savedData) {
       try {
-        return JSON.parse(savedData);
+        // 解密数据
+        const decryptedData = decryptData(savedData);
+        if (decryptedData) {
+          return decryptedData;
+        }
+        // 解密失败，返回初始数据
+        console.warn("游戏数据解密失败，使用初始数据");
+        return this.getInitialData();
       } catch (error) {
         console.error("解析游戏数据失败:", error);
         return this.getInitialData();
@@ -66,7 +180,9 @@ export class GameDataService {
    */
   savePlayerData(data: PlayerData): void {
     if (typeof window !== "undefined") {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+      // 加密数据
+      const encryptedData = encryptData(data);
+      localStorage.setItem(STORAGE_KEY, encryptedData);
     }
   }
 
