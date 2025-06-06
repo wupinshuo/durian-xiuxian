@@ -42,3 +42,5 @@ next-env.d.ts
 
 # demo
 demo.html
+.open-next
+.wrangler
