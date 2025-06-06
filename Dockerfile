@@ -3,6 +3,12 @@ FROM node:20-alpine AS deps
 
 WORKDIR /app
 
+# 设置npm镜像源
+RUN npm config set registry https://registry.npmmirror.com
+
+# 安装 pnpm
+RUN npm install -g pnpm@9.15.1 --force && pnpm config set registry https://registry.npmmirror.com
+
 # 只复制用于安装的必要文件
 COPY package.json pnpm-lock.yaml .npmrc ./
 
