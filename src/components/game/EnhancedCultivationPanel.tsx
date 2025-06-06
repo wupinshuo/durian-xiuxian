@@ -6,6 +6,7 @@ import { useGameData } from "@/store/GameDataContext";
 import { FaPlay, FaStop, FaBolt, FaFlask, FaArrowUp } from "react-icons/fa";
 import { motion } from "framer-motion";
 import { Skill as GameSkill } from "@/lib/types/game";
+import { generateUUID } from "@/lib/utils";
 
 export default function EnhancedCultivationPanel() {
   const {
@@ -145,7 +146,7 @@ export default function EnhancedCultivationPanel() {
 
           // 添加走火入魔事件
           addEvent({
-            id: crypto.randomUUID(),
+            id: generateUUID(),
             type: "cultivation",
             title: "走火入魔",
             description: message,
@@ -215,7 +216,7 @@ export default function EnhancedCultivationPanel() {
     }, 3500);
 
     addEvent({
-      id: crypto.randomUUID(),
+      id: generateUUID(),
       type: "cultivation",
       title: "开始修炼",
       description: `开始修炼《${selectedSkill?.name || ""}》，进入入定状态。`,
@@ -237,7 +238,7 @@ export default function EnhancedCultivationPanel() {
     }, 3500);
 
     addEvent({
-      id: crypto.randomUUID(),
+      id: generateUUID(),
       type: "cultivation",
       title: "结束修炼",
       description: `结束修炼《${selectedSkill?.name || ""}》，退出入定状态。`,
@@ -255,7 +256,7 @@ export default function EnhancedCultivationPanel() {
     }
 
     addEvent({
-      id: crypto.randomUUID(),
+      id: generateUUID(),
       type: "cultivation",
       title: "加速修炼",
       description: `消耗灵石加速修炼，修为大幅提升！`,

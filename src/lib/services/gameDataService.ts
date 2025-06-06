@@ -20,6 +20,7 @@ import {
   SkillRank,
   ItemEffect,
 } from "@/lib/types/game";
+import { generateUUID } from "@/lib/utils";
 
 // 存储键
 const STORAGE_KEY = "durian_xiuxian_game_data";
@@ -146,7 +147,7 @@ export class GameDataService {
 
       // 添加升级事件
       const upgradeEvent: GameEvent = {
-        id: crypto.randomUUID(),
+        id: generateUUID(),
         type: "cultivation",
         title: "境界提升",
         description: `修为积累满足，你的境界提升到了${data.character.realm}${data.character.realmLevel}层！`,
@@ -160,7 +161,7 @@ export class GameDataService {
 
       // 添加提示事件
       const readyEvent: GameEvent = {
-        id: crypto.randomUUID(),
+        id: generateUUID(),
         type: "cultivation",
         title: "突破准备",
         description: `你已经达到${data.character.realm}${data.character.realmLevel}层巅峰，可以尝试突破到更高境界了！`,
@@ -214,10 +215,10 @@ export class GameDataService {
 
       // 添加技能升级事件
       const skillUpgradeEvent: GameEvent = {
-        id: crypto.randomUUID(),
+        id: generateUUID(),
         type: "skill",
         title: "功法突破",
-        description: `你的《${skill.name}》已经突破到第${skill.level}层！`,
+        description: `你的${skill.name}已经提升到了${skill.rank}级！功法威力大幅提升。`,
         timestamp: Date.now(),
       };
 
@@ -343,13 +344,15 @@ export class GameDataService {
             );
 
             // 添加使用物品事件
-            this.addEvent({
-              id: crypto.randomUUID(),
+            const manaEvent: GameEvent = {
+              id: generateUUID(),
               type: "item",
               title: "使用物品",
-              description: `使用了${item.name}，恢复了${restoreAmount}点灵力。`,
+              description: `你使用了${item.name}，恢复了法力值。`,
               timestamp: Date.now(),
-            });
+            };
+
+            data.events.unshift(manaEvent);
           } else if (effect.type === "healthRestore") {
             // 恢复生命值
             const healthRestorePercent = effect.value as number;
@@ -364,13 +367,15 @@ export class GameDataService {
             );
 
             // 添加使用物品事件
-            this.addEvent({
-              id: crypto.randomUUID(),
+            const healEvent: GameEvent = {
+              id: generateUUID(),
               type: "item",
               title: "使用物品",
-              description: `使用了${item.name}，恢复了${restoreAmount}点气血。`,
+              description: `你使用了${item.name}，恢复了生命值。`,
               timestamp: Date.now(),
-            });
+            };
+
+            data.events.unshift(healEvent);
           }
         });
       }
@@ -396,13 +401,15 @@ export class GameDataService {
       );
 
       // 添加使用物品事件
-      this.addEvent({
-        id: crypto.randomUUID(),
+      const manaEvent: GameEvent = {
+        id: generateUUID(),
         type: "item",
         title: "使用物品",
-        description: `使用了${event.title}，恢复了${restoreAmount}点灵力。`,
+        description: `你使用了${event.title}，恢复了法力值。`,
         timestamp: Date.now(),
-      });
+      };
+
+      data.events.unshift(manaEvent);
     }
     if (effects.length > 0 && effects[0].type === "healthRestore") {
       // 恢复生命值
@@ -418,13 +425,15 @@ export class GameDataService {
       );
 
       // 添加使用物品事件
-      this.addEvent({
-        id: crypto.randomUUID(),
+      const healEvent: GameEvent = {
+        id: generateUUID(),
         type: "item",
         title: "使用物品",
-        description: `使用了${event.title}，恢复了${restoreAmount}点气血。`,
+        description: `你使用了${event.title}，恢复了生命值。`,
         timestamp: Date.now(),
-      });
+      };
+
+      data.events.unshift(healEvent);
     }
   }
 
@@ -473,7 +482,7 @@ export class GameDataService {
   // 初始角色信息
   private getInitialCharacter(): Character {
     return {
-      id: crypto.randomUUID(),
+      id: generateUUID(),
       name: "无名散修",
       avatar: DEFAULT_AVATAR,
       realm: CultivationRealm.QiRefining, // 练气期
@@ -502,7 +511,7 @@ export class GameDataService {
   private getInitialSkills(): Skill[] {
     return [
       {
-        id: crypto.randomUUID(),
+        id: generateUUID(),
         name: "紫霄玄功",
         description: "青云门入门功法，修炼可提升灵力和修为。",
         type: "cultivation",
@@ -524,7 +533,7 @@ export class GameDataService {
         ],
       },
       {
-        id: crypto.randomUUID(),
+        id: generateUUID(),
         name: "八荒剑诀",
         description: "剑修入门功法，修炼可提高攻击和速度。",
         type: "combat",
@@ -546,7 +555,7 @@ export class GameDataService {
         ],
       },
       {
-        id: crypto.randomUUID(),
+        id: generateUUID(),
         name: "金刚不灭体",
         description: "炼体功法，提高体魄和防御。",
         type: "cultivation",
@@ -574,7 +583,7 @@ export class GameDataService {
   private getInitialItems(): Item[] {
     return [
       {
-        id: crypto.randomUUID(),
+        id: generateUUID(),
         name: "凝气丹",
         description: "服用后可提升修炼速度30%，持续4小时。",
         type: ItemType.Pill,
@@ -593,7 +602,7 @@ export class GameDataService {
         stackable: true,
       },
       {
-        id: crypto.randomUUID(),
+        id: generateUUID(),
         name: "回气丹",
         description: "服用后立即恢复25%的灵力。",
         type: ItemType.Pill,
@@ -617,7 +626,7 @@ export class GameDataService {
   private getInitialEvents(): GameEvent[] {
     return [
       {
-        id: crypto.randomUUID(),
+        id: generateUUID(),
         type: "story",
         title: "踏入修真之路",
         description: "你开始了自己的修真之旅，愿仙途坦荡。",

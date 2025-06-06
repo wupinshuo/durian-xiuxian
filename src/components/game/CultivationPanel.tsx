@@ -4,6 +4,8 @@ import React, { useState, useEffect } from "react";
 import Image from "next/image";
 import { useGameData } from "@/store/GameDataContext";
 import { FaPlay, FaStop, FaBolt, FaFlask } from "react-icons/fa";
+import { CultivationRealm, GameEvent } from "@/lib/types/game";
+import { generateUUID } from "@/lib/utils";
 
 export default function CultivationPanel() {
   const { character, skills, addRealmProgress, addSkillProgress, addEvent } =
@@ -48,13 +50,15 @@ export default function CultivationPanel() {
 
     setProgressInterval(interval);
 
-    addEvent({
-      id: crypto.randomUUID(),
+    const event: GameEvent = {
+      id: generateUUID(),
       type: "cultivation",
       title: "开始修炼",
-      description: `开始修炼《${selectedSkill?.name || ""}》，进入入定状态。`,
+      description: `开始修炼功法，进入入定状态。`,
       timestamp: Date.now(),
-    });
+    };
+
+    addEvent(event);
   };
 
   // 停止修炼
@@ -69,13 +73,15 @@ export default function CultivationPanel() {
       setProgressInterval(null);
     }
 
-    addEvent({
-      id: crypto.randomUUID(),
+    const limitEvent: GameEvent = {
+      id: generateUUID(),
       type: "cultivation",
-      title: "结束修炼",
-      description: `结束修炼《${selectedSkill?.name || ""}》，退出入定状态。`,
+      title: "瓶颈出现",
+      description: "你已经达到了当前境界的修炼极限，需要寻求突破。",
       timestamp: Date.now(),
-    });
+    };
+
+    addEvent(limitEvent);
   };
 
   // 加速修炼（消耗灵石）
@@ -87,13 +93,15 @@ export default function CultivationPanel() {
       addSkillProgress(selectedSkillId, 3);
     }
 
-    addEvent({
-      id: crypto.randomUUID(),
+    const outerFocusEvent: GameEvent = {
+      id: generateUUID(),
       type: "cultivation",
-      title: "加速修炼",
-      description: `消耗灵石加速修炼，修为大幅提升！`,
+      title: "外界干扰",
+      description: "修炼过程中受到外界干扰，心神不宁，效果大打折扣。",
       timestamp: Date.now(),
-    });
+    };
+
+    addEvent(outerFocusEvent);
   };
 
   // 使用丹药

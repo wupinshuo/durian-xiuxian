@@ -12,6 +12,7 @@ import {
   ItemType,
   ItemEffect,
 } from "@/lib/types/game";
+import { generateUUID } from "@/lib/utils";
 
 // 上下文类型定义
 interface GameDataContextType {
@@ -114,7 +115,7 @@ export function GameDataProvider({ children }: { children: React.ReactNode }) {
         if (!prev) return prev;
 
         const tribulationEvent: GameEvent = {
-          id: crypto.randomUUID(),
+          id: generateUUID(),
           type: "tribulation",
           title: "天劫降临",
           description: `在突破${nextRealm}时，你遭遇了天劫！需要准备更多资源再次尝试突破。`,
@@ -138,7 +139,7 @@ export function GameDataProvider({ children }: { children: React.ReactNode }) {
         if (!prev) return prev;
 
         const breakthroughEvent: GameEvent = {
-          id: crypto.randomUUID(),
+          id: generateUUID(),
           type: "breakthrough",
           title: "境界突破",
           description: `恭喜你成功突破到${nextRealm}境界！你感觉自己体内的灵力更加充沛了。`,
@@ -214,7 +215,7 @@ export function GameDataProvider({ children }: { children: React.ReactNode }) {
 
         // 升级事件
         const upgradeEvent: GameEvent = {
-          id: crypto.randomUUID(),
+          id: generateUUID(),
           type: "cultivation",
           title: "境界提升",
           description: `修为积累满足，你的境界提升到了${newRealm}${newRealmLevel}层！`,
@@ -236,7 +237,7 @@ export function GameDataProvider({ children }: { children: React.ReactNode }) {
 
         // 提示事件
         const readyEvent: GameEvent = {
-          id: crypto.randomUUID(),
+          id: generateUUID(),
           type: "cultivation",
           title: "突破准备",
           description: `你已经达到${newRealm}${newRealmLevel}层巅峰，可以尝试突破到更高境界了！`,
@@ -321,7 +322,7 @@ export function GameDataProvider({ children }: { children: React.ReactNode }) {
 
           // 技能升级事件
           const skillUpgradeEvent: GameEvent = {
-            id: crypto.randomUUID(),
+            id: generateUUID(),
             type: "skill",
             title: "功法突破",
             description: `你的《${skill.name}》已经突破到第${newLevel}层！`,
@@ -487,7 +488,7 @@ export function GameDataProvider({ children }: { children: React.ReactNode }) {
           );
 
           updatedEvents.unshift({
-            id: crypto.randomUUID(),
+            id: generateUUID(),
             type: "item",
             title: "使用物品",
             description: `使用了${item.name}，恢复了${restoreAmount}点灵力。`,
@@ -509,7 +510,7 @@ export function GameDataProvider({ children }: { children: React.ReactNode }) {
           );
 
           updatedEvents.unshift({
-            id: crypto.randomUUID(),
+            id: generateUUID(),
             type: "item",
             title: "使用物品",
             description: `使用了${item.name}，恢复了${restoreAmount}点气血。`,
@@ -581,7 +582,7 @@ export function GameDataProvider({ children }: { children: React.ReactNode }) {
     setPlayerData(initialData);
     // 添加重生事件
     const rebirthEvent: GameEvent = {
-      id: crypto.randomUUID(),
+      id: generateUUID(),
       type: "story",
       title: "重新开始",
       description: "你决定放弃过去，重新开始修仙之旅。",
