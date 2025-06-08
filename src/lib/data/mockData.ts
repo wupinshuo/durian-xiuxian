@@ -14,7 +14,7 @@ import {
   SpiritRootQuality,
   SpiritRootType,
 } from "@/constants";
-import { v4 as uuidv4 } from "uuid";
+import { uuidTool } from "@/tools/uuid";
 
 // 模拟角色属性
 const mockAttributes: CharacterAttributes = {
@@ -31,7 +31,7 @@ const mockAttributes: CharacterAttributes = {
 
 // 模拟角色信息
 export const mockCharacter: Character = {
-  id: uuidv4(),
+  id: uuidTool.generateUUID(),
   name: "玄霄子",
   avatar: "/avatars/default.png",
   realm: CultivationRealm.QiRefining,
@@ -56,7 +56,7 @@ export const mockCharacter: Character = {
 // 模拟功法
 export const mockSkills: Skill[] = [
   {
-    id: uuidv4(),
+    id: uuidTool.generateUUID(),
     name: "紫霄玄功",
     description: "提升修为速度，增强灵力。",
     type: "cultivation",
@@ -78,7 +78,7 @@ export const mockSkills: Skill[] = [
     ],
   },
   {
-    id: uuidv4(),
+    id: uuidTool.generateUUID(),
     name: "八荒剑诀",
     description: "剑修功法，提高攻击和速度。",
     type: "combat",
@@ -100,7 +100,7 @@ export const mockSkills: Skill[] = [
     ],
   },
   {
-    id: uuidv4(),
+    id: uuidTool.generateUUID(),
     name: "金刚不灭体",
     description: "炼体功法，提高体魄和防御。",
     type: "auxiliary",
@@ -126,7 +126,7 @@ export const mockSkills: Skill[] = [
 // 模拟物品
 export const mockItems: Item[] = [
   {
-    id: uuidv4(),
+    id: uuidTool.generateUUID(),
     name: "凝气丹",
     description: "服用后可临时提升修炼速度30%，持续4小时。",
     type: ItemType.Pill,
@@ -145,7 +145,7 @@ export const mockItems: Item[] = [
     usable: true,
   },
   {
-    id: uuidv4(),
+    id: uuidTool.generateUUID(),
     name: "回气丹",
     description: "立即恢复25%灵力",
     type: ItemType.Pill,
@@ -163,7 +163,7 @@ export const mockItems: Item[] = [
     usable: true,
   },
   {
-    id: uuidv4(),
+    id: uuidTool.generateUUID(),
     name: "灵晶石",
     description: "蕴含丰富灵气的矿石，可用于修炼或炼器",
     type: ItemType.Material,
@@ -178,7 +178,7 @@ export const mockItems: Item[] = [
 // 模拟事件
 export const mockEvents: GameEvent[] = [
   {
-    id: uuidv4(),
+    id: uuidTool.generateUUID(),
     type: "cultivation",
     title: "炼制丹药成功",
     description: "你成功炼制了一瓶「凝气丹」，修为提升5%。",
@@ -192,7 +192,7 @@ export const mockEvents: GameEvent[] = [
     ],
   },
   {
-    id: uuidv4(),
+    id: uuidTool.generateUUID(),
     type: "combat",
     title: "击败妖兽",
     description: "在「落剑山」击败野怪「阴风狼」，获得灵石×15。",
@@ -206,7 +206,7 @@ export const mockEvents: GameEvent[] = [
     ],
   },
   {
-    id: uuidv4(),
+    id: uuidTool.generateUUID(),
     type: "insight",
     title: "悟性提升",
     description: "悟性提升，《八荒剑诀》修炼速度增加10%。",

@@ -4,12 +4,16 @@
 
 /** 游戏基础设置 */
 export const GAME_SETTINGS = {
-  /** 游戏名称 */
+  /** 游戏名称 榴莲修仙 */
   GAME_NAME: "榴莲修仙",
-  /** 游戏版本 */
+  /** 游戏版本 0.1.0 */
   GAME_VERSION: "0.1.0",
-  /** 本地存储键名 */
+  /** 本地存储键名 durian_xiuxian_save */
   STORAGE_KEY: "durian_xiuxian_save",
+  /** 加密密钥 */
+  ENCRYPTION_KEY: "durian_xiuxian_secret_key_2025",
+  /** 签名密钥 */
+  SIGNATURE_KEY: "durian_xiuxian_signature_2025",
 };
 
 /** 角色默认值 */

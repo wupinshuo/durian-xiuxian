@@ -5,7 +5,7 @@ import Image from "next/image";
 import { useGameData } from "@/store/GameDataContext";
 import { FaPlay, FaStop, FaBolt, FaFlask } from "react-icons/fa";
 import { GameEvent } from "@/types";
-import { generateUUID } from "@/lib/utils";
+import { uuidTool } from "@/tools/uuid";
 
 export default function CultivationPanel() {
   const { character, skills, addRealmProgress, addSkillProgress, addEvent } =
@@ -51,7 +51,7 @@ export default function CultivationPanel() {
     setProgressInterval(interval);
 
     const event: GameEvent = {
-      id: generateUUID(),
+      id: uuidTool.generateUUID(),
       type: "cultivation",
       title: "开始修炼",
       description: `开始修炼功法，进入入定状态。`,
@@ -74,7 +74,7 @@ export default function CultivationPanel() {
     }
 
     const limitEvent: GameEvent = {
-      id: generateUUID(),
+      id: uuidTool.generateUUID(),
       type: "cultivation",
       title: "瓶颈出现",
       description: "你已经达到了当前境界的修炼极限，需要寻求突破。",
@@ -94,7 +94,7 @@ export default function CultivationPanel() {
     }
 
     const outerFocusEvent: GameEvent = {
-      id: generateUUID(),
+      id: uuidTool.generateUUID(),
       type: "cultivation",
       title: "外界干扰",
       description: "修炼过程中受到外界干扰，心神不宁，效果大打折扣。",

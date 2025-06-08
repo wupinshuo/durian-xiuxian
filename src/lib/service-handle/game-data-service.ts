@@ -1,169 +1,44 @@
-/**
- * 游戏数据服务
- * 提供对游戏数据的读取和修改方法
- */
+import { encryptTool } from "@/tools/encrypt";
+import { uuidTool } from "@/tools/uuid";
 
-"use client";
-
+import { GAME_SETTINGS, DEFAULT_CHARACTER } from "@/constants/game";
 import {
-  PlayerData,
   Character,
-  Skill,
   Item,
-  GameEvent,
+  PlayerData,
   ItemEffect,
+  Skill,
+  GameEvent,
 } from "@/types";
-import { generateUUID } from "@/lib/utils";
 import {
-  CultivationRealm,
-  ItemType,
-  SkillRank,
-  GAME_SETTINGS,
-  DEFAULT_CHARACTER,
   MAX_REALM_PROGRESS,
+  CultivationRealm,
   SpiritRootType,
   SpiritRootQuality,
   CultivationPath,
-  RealmLevel,
+  SkillRank,
+  ItemType,
 } from "@/constants";
 
-// 存储键
-const STORAGE_KEY = GAME_SETTINGS.STORAGE_KEY;
-// 加密密钥，在实际应用中可以使用更复杂的密钥生成方法
-const ENCRYPTION_KEY = "durian_xiuxian_secret_key_2024";
-// 签名密钥
-const SIGNATURE_KEY = "durian_xiuxian_signature_2024";
-
-// 默认头像
-const DEFAULT_AVATAR = DEFAULT_CHARACTER.AVATAR;
-
 /**
- * 使用AES加密数据
- * @param data 要加密的数据
- * @returns 加密后的字符串
+ * 游戏数据处理服务
  */
-function encryptData(data: any): string {
-  try {
-    // 将数据转换为JSON字符串
-    const jsonString = JSON.stringify(data);
+class GameDataService {
+  /** 本地存储键名 durian_xiuxian_save */
+  private static readonly STORAGE_KEY = GAME_SETTINGS.STORAGE_KEY;
 
-    // 计算数据签名
-    const signature = generateSignature(jsonString);
-
-    // 将数据和签名打包在一起
-    const payload = {
-      data: jsonString,
-      signature: signature,
-      timestamp: Date.now(),
-    };
-
-    // 简单加密实现，使用Base64和异或运算
-    const payloadStr = JSON.stringify(payload);
-    let encrypted = "";
-    for (let i = 0; i < payloadStr.length; i++) {
-      const charCode =
-        payloadStr.charCodeAt(i) ^
-        ENCRYPTION_KEY.charCodeAt(i % ENCRYPTION_KEY.length);
-      encrypted += String.fromCharCode(charCode);
-    }
-
-    // 安全处理Unicode字符串的Base64编码
-    return btoa(
-      encodeURIComponent(encrypted).replace(/%([0-9A-F]{2})/g, (_, p1) =>
-        String.fromCharCode(parseInt(p1, 16))
-      )
-    );
-  } catch (error) {
-    console.error("数据加密失败:", error);
-    return "";
-  }
-}
-
-/**
- * 解密数据
- * @param encryptedData 加密的数据字符串
- * @returns 解密后的数据对象，如果解密失败则返回null
- */
-function decryptData(encryptedData: string): any {
-  try {
-    // 安全解码Base64
-    const rawStr = atob(encryptedData);
-    const result = decodeURIComponent(
-      Array.from(
-        rawStr,
-        (c) => "%" + ("00" + c.charCodeAt(0).toString(16)).slice(-2)
-      ).join("")
-    );
-
-    // 解密
-    let decrypted = "";
-    for (let i = 0; i < result.length; i++) {
-      const charCode =
-        result.charCodeAt(i) ^
-        ENCRYPTION_KEY.charCodeAt(i % ENCRYPTION_KEY.length);
-      decrypted += String.fromCharCode(charCode);
-    }
-
-    // 解析payload
-    const payload = JSON.parse(decrypted);
-
-    // 验证签名
-    const calculatedSignature = generateSignature(payload.data);
-    if (calculatedSignature !== payload.signature) {
-      console.error("数据签名验证失败，可能被篡改");
-      return null;
-    }
-
-    // 解析原始数据
-    return JSON.parse(payload.data);
-  } catch (error) {
-    console.error("数据解密失败:", error);
-    return null;
-  }
-}
-
-/**
- * 生成数据签名
- * @param data 要签名的数据
- * @returns 数据签名
- */
-function generateSignature(data: string): string {
-  // 简单的签名实现，使用字符串和签名密钥计算哈希值
-  let signature = 0;
-  const stringToHash = data + SIGNATURE_KEY;
-
-  for (let i = 0; i < stringToHash.length; i++) {
-    signature = (signature << 5) - signature + stringToHash.charCodeAt(i);
-    signature = signature & signature; // 转换为32位整数
-  }
-
-  return signature.toString(16);
-}
-
-/**
- * 提供对游戏数据的操作方法
- */
-export class GameDataService {
-  private playerData: PlayerData;
-
-  constructor() {
-    this.playerData = this.getPlayerData();
-  }
-
-  /**
-   * 获取玩家数据
-   */
-  getPlayerData(): PlayerData {
+  /** 获取玩家数据 */
+  public getPlayerData(): PlayerData {
     if (typeof window === "undefined") {
       return this.getInitialData();
     }
 
     // 从本地存储读取数据
-    const savedData = localStorage.getItem(STORAGE_KEY);
+    const savedData = localStorage.getItem(GameDataService.STORAGE_KEY);
     if (savedData) {
       try {
         // 解密数据
-        const decryptedData = decryptData(savedData);
+        const decryptedData = encryptTool.decryptData(savedData);
         if (decryptedData) {
           return decryptedData;
         }
@@ -182,47 +57,53 @@ export class GameDataService {
 
   /**
    * 保存玩家数据到本地存储
+   * @param data 玩家数据
    */
-  savePlayerData(data: PlayerData): void {
+  public savePlayerData(data: PlayerData): void {
     if (typeof window !== "undefined") {
       // 加密数据
-      const encryptedData = encryptData(data);
-      localStorage.setItem(STORAGE_KEY, encryptedData);
+      const encryptedData = encryptTool.encryptData(data);
+      localStorage.setItem(GameDataService.STORAGE_KEY, encryptedData);
     }
   }
 
   /**
    * 获取玩家角色信息
+   * @returns 角色信息
    */
-  getCharacter(): Character {
+  public getCharacter(): Character {
     return this.getPlayerData().character;
   }
 
   /**
    * 获取玩家功法列表
+   * @returns 功法列表
    */
-  getSkills(): Skill[] {
+  public getSkills(): Skill[] {
     return this.getPlayerData().skills;
   }
 
   /**
    * 获取玩家背包物品
+   * @returns 背包物品
    */
-  getItems(): Item[] {
+  public getItems(): Item[] {
     return this.getPlayerData().inventory.items;
   }
 
   /**
    * 获取玩家事件记录
+   * @returns 事件记录
    */
-  getEvents(): GameEvent[] {
+  public getEvents(): GameEvent[] {
     return this.getPlayerData().events;
   }
 
   /**
    * 获取玩家灵石数量
+   * @returns 灵石数量
    */
-  getSpiritualStones(): number {
+  public getSpiritualStones(): number {
     const playerData = this.getPlayerData();
     // 适配新的PlayerData结构
     if ("inventory" in playerData && "currency" in playerData.inventory) {
@@ -234,8 +115,9 @@ export class GameDataService {
 
   /**
    * 获取玩家灵玉数量
+   * @returns 灵玉数量
    */
-  getSpiritGems(): number {
+  public getSpiritGems(): number {
     const playerData = this.getPlayerData();
     // 适配新的PlayerData结构
     if ("inventory" in playerData && "currency" in playerData.inventory) {
@@ -247,8 +129,9 @@ export class GameDataService {
 
   /**
    * 修改玩家修为进度
+   * @param progress 进度
    */
-  updateRealmProgress(progress: number): void {
+  public updateRealmProgress(progress: number): void {
     const data = this.getPlayerData();
     data.character.realmProgress = Math.min(
       Math.max(0, progress),
@@ -259,8 +142,9 @@ export class GameDataService {
 
   /**
    * 增加玩家修为进度
+   * @param amount 进度
    */
-  addRealmProgress(amount: number): void {
+  public addRealmProgress(amount: number): void {
     const data = this.getPlayerData();
 
     // 防止整数溢出
@@ -282,8 +166,10 @@ export class GameDataService {
 
   /**
    * 修改功法修炼进度
+   * @param skillId 功法ID
+   * @param progress 进度
    */
-  updateSkillProgress(skillId: string, progress: number): void {
+  public updateSkillProgress(skillId: string, progress: number): void {
     const data = this.getPlayerData();
     const skill = data.skills.find((s) => s.id === skillId);
 
@@ -295,8 +181,10 @@ export class GameDataService {
 
   /**
    * 增加功法修炼进度
+   * @param skillId 功法ID
+   * @param amount 进度
    */
-  addSkillProgress(skillId: string, amount: number): void {
+  public addSkillProgress(skillId: string, amount: number): void {
     const data = this.getPlayerData();
     const skill = data.skills.find((s) => s.id === skillId);
 
@@ -311,7 +199,7 @@ export class GameDataService {
 
       // 添加技能升级事件
       const skillUpgradeEvent: GameEvent = {
-        id: generateUUID(),
+        id: uuidTool.generateUUID(),
         type: "skill",
         title: "功法突破",
         description: `你的${skill.name}已经提升到了${skill.rank}级！功法威力大幅提升。`,
@@ -329,8 +217,9 @@ export class GameDataService {
 
   /**
    * 增加或减少灵石
+   * @param amount 数量
    */
-  updateSpiritualStones(amount: number): void {
+  public updateSpiritualStones(amount: number): void {
     const data = this.getPlayerData();
     // 适配新的PlayerData结构
     if ("inventory" in data && "currency" in data.inventory) {
@@ -344,8 +233,9 @@ export class GameDataService {
 
   /**
    * 增加或减少灵玉
+   * @param amount 数量
    */
-  updateSpiritGems(amount: number): void {
+  public updateSpiritGems(amount: number): void {
     const data = this.getPlayerData();
     // 适配新的PlayerData结构
     if ("inventory" in data && "currency" in data.inventory) {
@@ -359,8 +249,13 @@ export class GameDataService {
 
   /**
    * 添加物品到背包
+   * @param item 物品
+   * @returns 是否添加成功
+   * @description 添加物品后，如果物品可堆叠，则合并相同物品
+   * @description 添加物品后，如果背包已满，则返回false
+   * @description 添加物品后，保存玩家数据
    */
-  addItem(item: Item): boolean {
+  public addItem(item: Item): boolean {
     const data = this.getPlayerData();
 
     // 检查背包是否已满
@@ -388,8 +283,18 @@ export class GameDataService {
 
   /**
    * 使用物品
+   * @param itemId 物品ID
+   * @returns 是否使用成功
+   * @description 使用物品后，物品数量减少，如果物品数量为0，则从背包中删除
+   * @description 使用物品后，应用物品效果
+   * @description 使用物品后，添加使用物品事件
+   * @description 使用物品后，保存玩家数据
+   * @description 使用物品后，如果物品数量为0，则从背包中删除
+   * @description 使用物品后，应用物品效果
+   * @description 使用物品后，添加使用物品事件
+   * @description 使用物品后，保存玩家数据
    */
-  useItem(itemId: string): boolean {
+  public useItem(itemId: string): boolean {
     const data = this.getPlayerData();
     const itemIndex = data.inventory.items.findIndex(
       (item) => item.id === itemId
@@ -418,6 +323,11 @@ export class GameDataService {
 
   /**
    * 应用物品效果
+   * @param data 玩家数据
+   * @param item 物品
+   * @description 应用物品效果后，恢复灵力或生命值
+   * @description 应用物品效果后，添加使用物品事件
+   * @description 应用物品效果后，保存玩家数据
    */
   private applyItemEffect(data: PlayerData, item: Item): void {
     // 这里只是简单实现，实际应该根据物品类型应用不同效果
@@ -441,7 +351,7 @@ export class GameDataService {
 
             // 添加使用物品事件
             const manaEvent: GameEvent = {
-              id: generateUUID(),
+              id: uuidTool.generateUUID(),
               type: "item",
               title: "使用物品",
               description: `你使用了${item.name}，恢复了法力值。`,
@@ -464,7 +374,7 @@ export class GameDataService {
 
             // 添加使用物品事件
             const healEvent: GameEvent = {
-              id: generateUUID(),
+              id: uuidTool.generateUUID(),
               type: "item",
               title: "使用物品",
               description: `你使用了${item.name}，恢复了生命值。`,
@@ -480,6 +390,10 @@ export class GameDataService {
 
   /**
    * 添加事件记录
+   * @param event 事件
+   * @description 添加事件记录后，恢复灵力或生命值
+   * @description 添加事件记录后，添加使用物品事件
+   * @description 添加事件记录后，保存玩家数据
    */
   addEvent(event: GameEvent): void {
     const data = this.getPlayerData();
@@ -498,7 +412,7 @@ export class GameDataService {
 
       // 添加使用物品事件
       const manaEvent: GameEvent = {
-        id: generateUUID(),
+        id: uuidTool.generateUUID(),
         type: "item",
         title: "使用物品",
         description: `你使用了${event.title}，恢复了法力值。`,
@@ -522,7 +436,7 @@ export class GameDataService {
 
       // 添加使用物品事件
       const healEvent: GameEvent = {
-        id: generateUUID(),
+        id: uuidTool.generateUUID(),
         type: "item",
         title: "使用物品",
         description: `你使用了${event.title}，恢复了生命值。`,
@@ -550,14 +464,20 @@ export class GameDataService {
 
   /**
    * 重置游戏数据（慎用）
+   * @description 重置游戏数据后，删除本地存储数据
+   * @description 重置游戏数据后，返回初始数据
+   * @description 重置游戏数据后，保存玩家数据
    */
   resetData(): void {
     if (typeof window !== "undefined") {
-      localStorage.removeItem(STORAGE_KEY);
+      localStorage.removeItem(GameDataService.STORAGE_KEY);
     }
   }
 
-  // 获取初始数据
+  /**
+   * 获取初始数据
+   * @returns 初始数据
+   */
   private getInitialData(): PlayerData {
     return {
       character: this.getInitialCharacter(),
@@ -575,12 +495,15 @@ export class GameDataService {
     };
   }
 
-  // 初始角色信息
+  /**
+   * 初始角色信息
+   * @returns 初始角色信息
+   */
   private getInitialCharacter(): Character {
     return {
-      id: generateUUID(),
+      id: uuidTool.generateUUID(),
       name: DEFAULT_CHARACTER.NAME,
-      avatar: DEFAULT_AVATAR,
+      avatar: DEFAULT_CHARACTER.AVATAR,
       realm: CultivationRealm.QiRefining, // 练气期
       realmLevel: 1,
       realmProgress: 0,
@@ -603,11 +526,14 @@ export class GameDataService {
     };
   }
 
-  // 初始功法
+  /**
+   * 初始功法
+   * @returns 初始功法
+   */
   private getInitialSkills(): Skill[] {
     return [
       {
-        id: generateUUID(),
+        id: uuidTool.generateUUID(),
         name: "紫霄玄功",
         description: "青云门入门功法，修炼可提升灵力和修为。",
         type: "cultivation",
@@ -629,7 +555,7 @@ export class GameDataService {
         ],
       },
       {
-        id: generateUUID(),
+        id: uuidTool.generateUUID(),
         name: "八荒剑诀",
         description: "剑修入门功法，修炼可提高攻击和速度。",
         type: "combat",
@@ -651,7 +577,7 @@ export class GameDataService {
         ],
       },
       {
-        id: generateUUID(),
+        id: uuidTool.generateUUID(),
         name: "金刚不灭体",
         description: "炼体功法，提高体魄和防御。",
         type: "cultivation",
@@ -675,11 +601,14 @@ export class GameDataService {
     ];
   }
 
-  // 初始物品
+  /**
+   * 初始物品
+   * @returns 初始物品
+   */
   private getInitialItems(): Item[] {
     return [
       {
-        id: generateUUID(),
+        id: uuidTool.generateUUID(),
         name: "凝气丹",
         description: "服用后可提升修炼速度30%，持续4小时。",
         type: ItemType.Pill,
@@ -698,7 +627,7 @@ export class GameDataService {
         stackable: true,
       },
       {
-        id: generateUUID(),
+        id: uuidTool.generateUUID(),
         name: "回气丹",
         description: "服用后立即恢复25%的灵力。",
         type: ItemType.Pill,
@@ -718,11 +647,14 @@ export class GameDataService {
     ];
   }
 
-  // 初始事件
+  /**
+   * 初始事件
+   * @returns 初始事件
+   */
   private getInitialEvents(): GameEvent[] {
     return [
       {
-        id: generateUUID(),
+        id: uuidTool.generateUUID(),
         type: "story",
         title: "踏入修真之路",
         description: "你开始了自己的修真之旅，愿仙途坦荡。",
@@ -731,3 +663,5 @@ export class GameDataService {
     ];
   }
 }
+
+export const gameDataService = new GameDataService();

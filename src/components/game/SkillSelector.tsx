@@ -3,7 +3,7 @@
 import React from "react";
 import { useGameData } from "@/store/GameDataContext";
 import { UISkill, SkillType, SkillRarity } from "@/types";
-import { convertToUISkill } from "@/lib/utils/typeConverters";
+import { convertTool } from "@/tools/convert";
 import {
   FaFire,
   FaHandSparkles,
@@ -33,7 +33,7 @@ export default function SkillSelector({
   function convertContextSkills(): UISkill[] {
     if (!contextSkills) return [];
 
-    return contextSkills.map((skill) => convertToUISkill(skill));
+    return contextSkills.map((skill) => convertTool.convertToUISkill(skill));
   }
 
   // 根据功法类型获取图标

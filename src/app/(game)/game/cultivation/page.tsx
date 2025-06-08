@@ -7,14 +7,14 @@ import CharacterEditor from "@/components/game/CharacterEditor";
 import { useGameData } from "@/store/GameDataContext";
 import { FaInfoCircle, FaExclamationTriangle } from "react-icons/fa";
 import { Skill, UISkill } from "@/types";
-import { convertToUISkill } from "@/lib/utils/typeConverters";
+import { convertTool } from "@/tools/convert";
 
 export default function CultivationPage() {
   const { skills } = useGameData();
 
   // 将游戏系统中的技能转换为UI组件需要的技能类型
   const enhancedSkills: UISkill[] = skills.map((skill: Skill) =>
-    convertToUISkill(skill)
+    convertTool.convertToUISkill(skill)
   );
 
   return (

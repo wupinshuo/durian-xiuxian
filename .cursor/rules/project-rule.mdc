@@ -37,14 +37,13 @@ alwaysApply: true
     - `/layout`: 布局相关组件
     - `/shared`: 共享组件
   - `/lib`: 工具函数和库
-    - `/utils.ts`: 通用工具函数
-    - `/types`: 类型定义
-    - `/services`: API服务和数据获取
+    - `/service-handle`: 计算相关逻辑（或后端服务）
     - `/data`: 静态数据和配置
   - `/store`: 状态管理
     - `GameDataContext.tsx`: 游戏数据上下文
   - `/types`: 全局类型定义
   - `/constants`: 全局常量
+  - `/tools`: 通用工具类函数
 - `/public`: 静态资源
 - `/.github`: GitHub配置
 - `/.vscode`: VSCode配置
@@ -52,7 +51,7 @@ alwaysApply: true
 
 - src/constants 全局定义的常量都写到这个文件夹下面
 - src/types 全局定义的类型都写到这个文件夹下面
-- src/tools 工具类函数放在这个文件夹下面
+- src/tools 工具类函数都放在这个文件夹下面
 
 ## TypeScript使用
 - 始终使用严格类型检查。
