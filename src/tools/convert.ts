@@ -132,6 +132,20 @@ class ConvertTool {
         return `${type}: ${value}`;
     }
   }
+
+  /**
+   * 获取悟性等级
+   * @param insight 悟性值
+   * @returns 悟性等级
+   */
+  public getInsightLevel(insight: number): string {
+    if (insight >= 90) return "天资卓越";
+    if (insight >= 75) return "上等";
+    if (insight >= 50) return "中上";
+    if (insight >= 30) return "中等";
+    if (insight >= 15) return "中下";
+    return "下等";
+  }
 }
 
 export const convertTool = new ConvertTool();

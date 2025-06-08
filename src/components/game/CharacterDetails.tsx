@@ -2,6 +2,7 @@
 
 import React from "react";
 import { useGameData } from "@/store/GameDataContext";
+import { convertTool } from "@/tools/convert";
 
 export default function CharacterDetails() {
   const { character } = useGameData();
@@ -56,7 +57,7 @@ export default function CharacterDetails() {
             <span className="text-gray-400">悟性:</span>
             <span>
               {character.attributes.insight || character.attributes.spirit} (
-              {getInsightLevel(
+              {convertTool.getInsightLevel(
                 character.attributes.insight || character.attributes.spirit
               )}
               )
@@ -66,13 +67,4 @@ export default function CharacterDetails() {
       </div>
     </div>
   );
-}
-
-function getInsightLevel(insight: number): string {
-  if (insight >= 90) return "天资卓越";
-  if (insight >= 75) return "上等";
-  if (insight >= 50) return "中上";
-  if (insight >= 30) return "中等";
-  if (insight >= 15) return "中下";
-  return "下等";
 }

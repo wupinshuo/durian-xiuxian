@@ -18,6 +18,9 @@ import {
   CultivationPath,
   SkillRank,
   ItemType,
+  MAX_REALM_LEVEL,
+  TRIBULATION_PROBABILITY,
+  RealmLevel,
 } from "@/constants";
 
 /**
@@ -128,350 +131,558 @@ class GameDataService {
   }
 
   /**
-   * 修改玩家修为进度
-   * @param progress 进度
+   * 获取下一个境界
+   * @param currentRealm 当前境界
+   * @returns 下一个境界或null
    */
-  public updateRealmProgress(progress: number): void {
-    const data = this.getPlayerData();
-    data.character.realmProgress = Math.min(
-      Math.max(0, progress),
-      MAX_REALM_PROGRESS
+  public getNextRealm(currentRealm: CultivationRealm): CultivationRealm | null {
+    switch (currentRealm) {
+      case CultivationRealm.QiRefining:
+        return CultivationRealm.Foundation;
+      case CultivationRealm.Foundation:
+        return CultivationRealm.CoreFormation;
+      case CultivationRealm.CoreFormation:
+        return CultivationRealm.NascentSoul;
+      case CultivationRealm.NascentSoul:
+        return CultivationRealm.SpiritSevering;
+      case CultivationRealm.SpiritSevering:
+        return CultivationRealm.Void;
+      case CultivationRealm.Void:
+        return CultivationRealm.Integration;
+      case CultivationRealm.Integration:
+        return CultivationRealm.Ascension;
+      case CultivationRealm.Ascension:
+        return null; // 已达最高境界
+      default:
+        return null;
+    }
+  }
+
+  /**
+   * 检查是否可以升级境界
+   * @param character 角色数据
+   * @returns 是否可以升级
+   */
+  public checkForRealmUpgrade(character: Character): boolean {
+    return (
+      character.realmLevel >= MAX_REALM_LEVEL &&
+      character.realmProgress >= MAX_REALM_PROGRESS
     );
-    this.savePlayerData(data);
   }
 
   /**
-   * 增加玩家修为进度
-   * @param amount 进度
+   * 更新角色信息
+   * @param data 玩家数据
+   * @param updatedCharacter 更新的角色信息
+   * @returns 更新后的玩家数据
    */
-  public addRealmProgress(amount: number): void {
-    const data = this.getPlayerData();
+  public updateCharacter(
+    data: PlayerData,
+    updatedCharacter: Character
+  ): PlayerData {
+    return {
+      ...data,
+      character: updatedCharacter,
+    };
+  }
 
-    // 防止整数溢出
+  /**
+   * 更新修为进度
+   * @param data 玩家数据
+   * @param progress 新进度
+   * @returns 更新后的玩家数据
+   */
+  public updateRealmProgress(data: PlayerData, progress: number): PlayerData {
+    return {
+      ...data,
+      character: {
+        ...data.character,
+        realmProgress: Math.min(Math.max(0, progress), MAX_REALM_PROGRESS),
+      },
+    };
+  }
+
+  /**
+   * 增加修为进度
+   * @param data 玩家数据
+   * @param amount 增加量
+   * @returns 更新后的玩家数据
+   */
+  public addRealmProgress(data: PlayerData, amount: number): PlayerData {
+    // 计算新的修为进度
     let newProgress = data.character.realmProgress + amount;
+    let newRealmLevel = data.character.realmLevel;
+    const newRealm = data.character.realm;
+    let updatedEvents = [...data.events];
 
-    if (newProgress <= 0) {
-      // 如果修为减少到0以下，则重置为0
-      data.character.realmProgress = 0;
-    } else if (newProgress >= MAX_REALM_PROGRESS) {
-      // 如果修为超过最大值，则设置为最大值
-      data.character.realmProgress = MAX_REALM_PROGRESS;
-    } else {
-      // 正常增加修为
-      data.character.realmProgress = newProgress;
+    // 如果修为进度小于0，则设置为0
+    if (newProgress < 0) {
+      newProgress = 0;
     }
 
-    this.savePlayerData(data);
+    // 如果达到100%，且不是巅峰层级，自动升级层级
+    if (newProgress >= MAX_REALM_PROGRESS && newRealmLevel < MAX_REALM_LEVEL) {
+      // 确保newRealmLevel是合法的RealmLevel类型
+      newRealmLevel = (newRealmLevel + 1) as RealmLevel;
+      newProgress -= MAX_REALM_PROGRESS;
+
+      // 升级事件
+      const upgradeEvent: GameEvent = {
+        id: uuidTool.generateUUID(),
+        type: "cultivation",
+        title: "境界提升",
+        description: `修为积累满足，你的境界提升到了${newRealm}${newRealmLevel}层！`,
+        timestamp: Date.now(),
+      };
+
+      updatedEvents = [upgradeEvent, ...updatedEvents];
+    } else if (newProgress >= MAX_REALM_PROGRESS) {
+      // 达到巅峰，保持在100%
+      newProgress = MAX_REALM_PROGRESS;
+
+      // 提示事件
+      const readyEvent: GameEvent = {
+        id: uuidTool.generateUUID(),
+        type: "cultivation",
+        title: "突破准备",
+        description: `你已经达到${newRealm}${newRealmLevel}层巅峰，可以尝试突破到更高境界了！`,
+        timestamp: Date.now(),
+      };
+
+      updatedEvents = [readyEvent, ...updatedEvents];
+    }
+
+    // 返回更新后的数据
+    return {
+      ...data,
+      character: {
+        ...data.character,
+        realmLevel: newRealmLevel,
+        realmProgress: newProgress,
+      },
+      events: updatedEvents,
+    };
   }
 
   /**
-   * 修改功法修炼进度
-   * @param skillId 功法ID
-   * @param progress 进度
+   * 更新技能进度
+   * @param data 玩家数据
+   * @param skillId 技能ID
+   * @param progress 新进度
+   * @returns 更新后的玩家数据
    */
-  public updateSkillProgress(skillId: string, progress: number): void {
-    const data = this.getPlayerData();
-    const skill = data.skills.find((s) => s.id === skillId);
+  public updateSkillProgress(
+    data: PlayerData,
+    skillId: string,
+    progress: number
+  ): PlayerData {
+    // 查找技能
+    const skillIndex = data.skills.findIndex((s) => s.id === skillId);
+    if (skillIndex === -1) return data;
 
-    if (skill) {
-      skill.progress = Math.min(Math.max(0, progress), 100);
-      this.savePlayerData(data);
-    }
+    // 创建技能副本
+    const updatedSkills = [...data.skills];
+    updatedSkills[skillIndex] = {
+      ...updatedSkills[skillIndex],
+      progress: Math.min(Math.max(0, progress), 100),
+    };
+
+    // 返回更新后的数据
+    return {
+      ...data,
+      skills: updatedSkills,
+    };
   }
 
   /**
    * 增加功法修炼进度
+   * @param data 玩家数据
    * @param skillId 功法ID
    * @param amount 进度
+   * @returns 更新后的玩家数据
    */
-  public addSkillProgress(skillId: string, amount: number): void {
-    const data = this.getPlayerData();
+  public addSkillProgress(
+    data: PlayerData,
+    skillId: string,
+    amount: number
+  ): PlayerData {
     const skill = data.skills.find((s) => s.id === skillId);
+    if (!skill) return data;
 
-    if (!skill) return;
+    // 创建副本
+    let updatedSkills = [...data.skills];
+    let updatedEvents = [...data.events];
 
-    skill.progress += amount;
+    // 找到技能索引
+    const skillIndex = updatedSkills.findIndex((s) => s.id === skillId);
+    if (skillIndex === -1) return data;
+
+    // 更新技能副本
+    let updatedSkill = { ...updatedSkills[skillIndex] };
+    updatedSkill.progress += amount;
 
     // 如果技能进度满了，提升层级
-    if (skill.progress >= 100 && skill.level < skill.maxLevel) {
-      skill.level += 1;
-      skill.progress -= 100;
+    if (
+      updatedSkill.progress >= 100 &&
+      updatedSkill.level < updatedSkill.maxLevel
+    ) {
+      updatedSkill.level += 1;
+      updatedSkill.progress -= 100;
 
       // 添加技能升级事件
       const skillUpgradeEvent: GameEvent = {
         id: uuidTool.generateUUID(),
         type: "skill",
         title: "功法突破",
-        description: `你的${skill.name}已经提升到了${skill.rank}级！功法威力大幅提升。`,
+        description: `你的《${updatedSkill.name}》已经突破到第${updatedSkill.level}层！`,
         timestamp: Date.now(),
       };
 
-      data.events.unshift(skillUpgradeEvent);
-    } else if (skill.progress >= 100) {
+      updatedEvents = [skillUpgradeEvent, ...updatedEvents];
+    } else if (updatedSkill.progress >= 100) {
       // 技能已达最大层级，保持在100%
-      skill.progress = 100;
+      updatedSkill.progress = 100;
     }
 
-    this.savePlayerData(data);
+    // 更新技能列表
+    updatedSkills[skillIndex] = updatedSkill;
+
+    // 返回更新后的数据
+    return {
+      ...data,
+      skills: updatedSkills,
+      events: updatedEvents,
+    };
   }
 
   /**
-   * 增加或减少灵石
-   * @param amount 数量
+   * 更新灵石数量
+   * @param data 玩家数据
+   * @param amount 新数量
+   * @returns 更新后的玩家数据
    */
-  public updateSpiritualStones(amount: number): void {
-    const data = this.getPlayerData();
-    // 适配新的PlayerData结构
-    if ("inventory" in data && "currency" in data.inventory) {
-      data.inventory.currency.spiritualStones = Math.max(0, amount);
-    } else {
-      // 兼容旧结构
-      (data as any).spiritualStones = Math.max(0, amount);
-    }
-    this.savePlayerData(data);
+  public updateSpiritualStones(data: PlayerData, amount: number): PlayerData {
+    return {
+      ...data,
+      inventory: {
+        ...data.inventory,
+        currency: {
+          ...data.inventory.currency,
+          spiritualStones: Math.max(0, amount),
+        },
+      },
+    };
   }
 
   /**
-   * 增加或减少灵玉
-   * @param amount 数量
+   * 更新灵玉数量
+   * @param data 玩家数据
+   * @param amount 新数量
+   * @returns 更新后的玩家数据
    */
-  public updateSpiritGems(amount: number): void {
-    const data = this.getPlayerData();
-    // 适配新的PlayerData结构
-    if ("inventory" in data && "currency" in data.inventory) {
-      data.inventory.currency.spiritGems = Math.max(0, amount);
-    } else {
-      // 兼容旧结构
-      (data as any).spiritGems = Math.max(0, amount);
-    }
-    this.savePlayerData(data);
+  public updateSpiritGems(data: PlayerData, amount: number): PlayerData {
+    return {
+      ...data,
+      inventory: {
+        ...data.inventory,
+        currency: {
+          ...data.inventory.currency,
+          spiritGems: Math.max(0, amount),
+        },
+      },
+    };
   }
 
   /**
    * 添加物品到背包
+   * @param data 玩家数据
    * @param item 物品
-   * @returns 是否添加成功
-   * @description 添加物品后，如果物品可堆叠，则合并相同物品
-   * @description 添加物品后，如果背包已满，则返回false
-   * @description 添加物品后，保存玩家数据
+   * @returns 添加结果和更新后的玩家数据
    */
-  public addItem(item: Item): boolean {
-    const data = this.getPlayerData();
-
+  public addItem(
+    data: PlayerData,
+    item: Item
+  ): { success: boolean; updatedData: PlayerData } {
     // 检查背包是否已满
     if (data.inventory.items.length >= data.inventory.maxSize) {
-      return false;
+      return { success: false, updatedData: data };
     }
+
+    // 创建物品列表副本
+    let updatedItems = [...data.inventory.items];
 
     // 检查是否可堆叠
     if (item.stackable) {
-      const existingItem = data.inventory.items.find(
+      const existingItemIndex = updatedItems.findIndex(
         (i) => i.name === item.name && i.type === item.type
       );
-      if (existingItem) {
-        existingItem.quantity += item.quantity;
-        this.savePlayerData(data);
-        return true;
+
+      if (existingItemIndex !== -1) {
+        // 更新现有物品数量
+        updatedItems[existingItemIndex] = {
+          ...updatedItems[existingItemIndex],
+          quantity: updatedItems[existingItemIndex].quantity + item.quantity,
+        };
+
+        return {
+          success: true,
+          updatedData: {
+            ...data,
+            inventory: {
+              ...data.inventory,
+              items: updatedItems,
+            },
+          },
+        };
       }
     }
 
     // 添加新物品
-    data.inventory.items.push(item);
-    this.savePlayerData(data);
-    return true;
+    return {
+      success: true,
+      updatedData: {
+        ...data,
+        inventory: {
+          ...data.inventory,
+          items: [...updatedItems, item],
+        },
+      },
+    };
   }
 
   /**
    * 使用物品
+   * @param data 玩家数据
    * @param itemId 物品ID
-   * @returns 是否使用成功
-   * @description 使用物品后，物品数量减少，如果物品数量为0，则从背包中删除
-   * @description 使用物品后，应用物品效果
-   * @description 使用物品后，添加使用物品事件
-   * @description 使用物品后，保存玩家数据
-   * @description 使用物品后，如果物品数量为0，则从背包中删除
-   * @description 使用物品后，应用物品效果
-   * @description 使用物品后，添加使用物品事件
-   * @description 使用物品后，保存玩家数据
+   * @returns 使用成功和更新后的玩家数据
    */
-  public useItem(itemId: string): boolean {
-    const data = this.getPlayerData();
+  public useItem(
+    data: PlayerData,
+    itemId: string
+  ): { success: boolean; updatedData: PlayerData } {
     const itemIndex = data.inventory.items.findIndex(
       (item) => item.id === itemId
     );
 
     if (itemIndex === -1 || !data.inventory.items[itemIndex].usable) {
-      return false;
+      return { success: false, updatedData: data };
     }
 
     const item = data.inventory.items[itemIndex];
+    const updatedItems = [...data.inventory.items];
 
     // 减少物品数量
-    item.quantity -= 1;
-
-    // 如果物品数量为0，从背包中删除
-    if (item.quantity <= 0) {
-      data.inventory.items.splice(itemIndex, 1);
+    if (updatedItems[itemIndex].quantity > 1) {
+      updatedItems[itemIndex] = {
+        ...updatedItems[itemIndex],
+        quantity: updatedItems[itemIndex].quantity - 1,
+      };
+    } else {
+      updatedItems.splice(itemIndex, 1);
     }
 
     // 应用物品效果
-    this.applyItemEffect(data, item);
+    let updatedCharacter = { ...data.character };
+    let updatedEvents = [...data.events];
 
-    this.savePlayerData(data);
-    return true;
-  }
-
-  /**
-   * 应用物品效果
-   * @param data 玩家数据
-   * @param item 物品
-   * @description 应用物品效果后，恢复灵力或生命值
-   * @description 应用物品效果后，添加使用物品事件
-   * @description 应用物品效果后，保存玩家数据
-   */
-  private applyItemEffect(data: PlayerData, item: Item): void {
-    // 这里只是简单实现，实际应该根据物品类型应用不同效果
+    // 处理丹药效果
     if (item.type === ItemType.Pill) {
-      // 物品效果
-      const effects = item.effects;
-      if (effects) {
-        effects.forEach((effect) => {
-          if (effect.type === "manaRestore") {
-            // 恢复灵力
-            const manaRestorePercent = effect.value as number;
-            const maxMana = data.character.attributes.mana;
-            const restoreAmount = Math.floor(
-              (maxMana * manaRestorePercent) / 100
-            );
+      const effects = item.effects as ItemEffect[];
+      // 恢复灵力
+      if (effects.length > 0 && effects[0].type === "manaRestore") {
+        const manaRestorePercent = effects[0].value as number;
+        const maxMana = updatedCharacter.attributes.mana;
+        const restoreAmount = Math.floor((maxMana * manaRestorePercent) / 100);
 
-            data.character.attributes.manaCurrent = Math.min(
-              maxMana,
-              data.character.attributes.manaCurrent + restoreAmount
-            );
+        updatedCharacter.attributes = {
+          ...updatedCharacter.attributes,
+          manaCurrent: Math.min(
+            maxMana,
+            updatedCharacter.attributes.manaCurrent + restoreAmount
+          ),
+        };
 
-            // 添加使用物品事件
-            const manaEvent: GameEvent = {
-              id: uuidTool.generateUUID(),
-              type: "item",
-              title: "使用物品",
-              description: `你使用了${item.name}，恢复了法力值。`,
-              timestamp: Date.now(),
-            };
+        updatedEvents.unshift({
+          id: uuidTool.generateUUID(),
+          type: "item",
+          title: "使用物品",
+          description: `使用了${item.name}，恢复了${restoreAmount}点灵力。`,
+          timestamp: Date.now(),
+        });
+      }
 
-            data.events.unshift(manaEvent);
-          } else if (effect.type === "healthRestore") {
-            // 恢复生命值
-            const healthRestorePercent = effect.value as number;
-            const maxHealth = data.character.attributes.health;
-            const restoreAmount = Math.floor(
-              (maxHealth * healthRestorePercent) / 100
-            );
+      // 恢复气血
+      if (effects.length > 0 && effects[0].type === "healthRestore") {
+        const healthRestorePercent = effects[0].value as number;
+        const maxHealth = updatedCharacter.attributes.health;
+        const restoreAmount = Math.floor(
+          (maxHealth * healthRestorePercent) / 100
+        );
 
-            data.character.attributes.healthCurrent = Math.min(
-              maxHealth,
-              data.character.attributes.healthCurrent + restoreAmount
-            );
+        updatedCharacter.attributes = {
+          ...updatedCharacter.attributes,
+          healthCurrent: Math.min(
+            maxHealth,
+            updatedCharacter.attributes.healthCurrent + restoreAmount
+          ),
+        };
 
-            // 添加使用物品事件
-            const healEvent: GameEvent = {
-              id: uuidTool.generateUUID(),
-              type: "item",
-              title: "使用物品",
-              description: `你使用了${item.name}，恢复了生命值。`,
-              timestamp: Date.now(),
-            };
-
-            data.events.unshift(healEvent);
-          }
+        updatedEvents.unshift({
+          id: uuidTool.generateUUID(),
+          type: "item",
+          title: "使用物品",
+          description: `使用了${item.name}，恢复了${restoreAmount}点气血。`,
+          timestamp: Date.now(),
         });
       }
     }
+
+    return {
+      success: true,
+      updatedData: {
+        ...data,
+        character: updatedCharacter,
+        inventory: {
+          ...data.inventory,
+          items: updatedItems,
+        },
+        events: updatedEvents,
+      },
+    };
   }
 
   /**
-   * 添加事件记录
+   * 出售物品
+   * @param data 玩家数据
+   * @param itemId 物品ID
+   * @returns 出售价格和更新后的玩家数据
+   */
+  public sellItem(
+    data: PlayerData,
+    itemId: string
+  ): { price: number; updatedData: PlayerData } {
+    const item = data.inventory.items.find((item) => item.id === itemId);
+    if (!item) return { price: 0, updatedData: data };
+
+    const price = item.value || 0;
+
+    return {
+      price,
+      updatedData: {
+        ...data,
+        inventory: {
+          ...data.inventory,
+          items: data.inventory.items.filter((i) => i.id !== itemId),
+          currency: {
+            ...data.inventory.currency,
+            spiritualStones: data.inventory.currency.spiritualStones + price,
+          },
+        },
+      },
+    };
+  }
+
+  /**
+   * 添加事件
+   * @param data 玩家数据
    * @param event 事件
-   * @description 添加事件记录后，恢复灵力或生命值
-   * @description 添加事件记录后，添加使用物品事件
-   * @description 添加事件记录后，保存玩家数据
+   * @returns 更新后的玩家数据
    */
-  addEvent(event: GameEvent): void {
-    const data = this.getPlayerData();
-    // 物品效果
-    const effects = event.effects as ItemEffect[];
-    if (effects.length > 0 && effects[0].type === "manaRestore") {
-      // 恢复灵力
-      const manaRestorePercent = effects[0].value as number;
-      const maxMana = data.character.attributes.mana;
-      const restoreAmount = Math.floor((maxMana * manaRestorePercent) / 100);
+  public addEvent(data: PlayerData, event: GameEvent): PlayerData {
+    return {
+      ...data,
+      events: [event, ...data.events.slice(0, 49)], // 保留最新的50条记录
+    };
+  }
 
-      data.character.attributes.manaCurrent = Math.min(
-        maxMana,
-        data.character.attributes.manaCurrent + restoreAmount
-      );
-
-      // 添加使用物品事件
-      const manaEvent: GameEvent = {
-        id: uuidTool.generateUUID(),
-        type: "item",
-        title: "使用物品",
-        description: `你使用了${event.title}，恢复了法力值。`,
-        timestamp: Date.now(),
-      };
-
-      data.events.unshift(manaEvent);
+  /**
+   * 升级境界
+   * @param data 玩家数据
+   * @returns 是否升级成功和更新后的玩家数据
+   */
+  public upgradeRealm(data: PlayerData): {
+    success: boolean;
+    updatedData: PlayerData;
+  } {
+    if (!this.checkForRealmUpgrade(data.character)) {
+      return { success: false, updatedData: data };
     }
-    if (effects.length > 0 && effects[0].type === "healthRestore") {
-      // 恢复生命值
-      const healthRestorePercent = effects[0].value as number;
-      const maxHealth = data.character.attributes.health;
-      const restoreAmount = Math.floor(
-        (maxHealth * healthRestorePercent) / 100
-      );
 
-      data.character.attributes.healthCurrent = Math.min(
-        maxHealth,
-        data.character.attributes.healthCurrent + restoreAmount
-      );
+    const nextRealm = this.getNextRealm(data.character.realm);
+    if (!nextRealm) {
+      return { success: false, updatedData: data };
+    }
 
-      // 添加使用物品事件
-      const healEvent: GameEvent = {
+    // 随机决定是否遭遇天劫
+    const encounterTribulation = Math.random() * 100 < TRIBULATION_PROBABILITY;
+
+    if (encounterTribulation) {
+      // 遭遇天劫
+      const tribulationEvent: GameEvent = {
         id: uuidTool.generateUUID(),
-        type: "item",
-        title: "使用物品",
-        description: `你使用了${event.title}，恢复了生命值。`,
+        type: "tribulation",
+        title: "天劫降临",
+        description: `在突破${nextRealm}时，你遭遇了天劫！需要准备更多资源再次尝试突破。`,
         timestamp: Date.now(),
       };
 
-      data.events.unshift(healEvent);
+      return {
+        success: false,
+        updatedData: {
+          ...data,
+          character: {
+            ...data.character,
+            realmProgress: Math.max(0, data.character.realmProgress - 30), // 损失30%进度
+          },
+          events: [tribulationEvent, ...data.events],
+        },
+      };
+    } else {
+      // 成功突破
+      const breakthroughEvent: GameEvent = {
+        id: uuidTool.generateUUID(),
+        type: "breakthrough",
+        title: "境界突破",
+        description: `恭喜你成功突破到${nextRealm}境界！你感觉自己体内的灵力更加充沛了。`,
+        timestamp: Date.now(),
+      };
+
+      return {
+        success: true,
+        updatedData: {
+          ...data,
+          character: {
+            ...data.character,
+            realm: nextRealm,
+            realmLevel: 1,
+            realmProgress: 0,
+            attributes: {
+              ...data.character.attributes,
+              attack: data.character.attributes.attack + 50,
+              defense: data.character.attributes.defense + 40,
+              spirit: data.character.attributes.spirit + 60,
+              speed: data.character.attributes.speed + 30,
+              health: data.character.attributes.health + 100,
+              healthCurrent: data.character.attributes.health + 100,
+              mana: data.character.attributes.mana + 80,
+              manaCurrent: data.character.attributes.mana + 80,
+            },
+          },
+          events: [breakthroughEvent, ...data.events],
+        },
+      };
     }
   }
 
-  // /**
-  //  * 添加事件记录
-  //  */
-  // addEvent(event: GameEvent): void {
-  //   const data = this.getPlayerData();
-  //   data.events.unshift(event);
-
-  //   // 只保留最近的50条事件
-  //   if (data.events.length > 50) {
-  //     data.events = data.events.slice(0, 50);
-  //   }
-
-  //   this.savePlayerData(data);
-  // }
-
   /**
-   * 重置游戏数据（慎用）
-   * @description 重置游戏数据后，删除本地存储数据
-   * @description 重置游戏数据后，返回初始数据
-   * @description 重置游戏数据后，保存玩家数据
+   * 重置游戏数据
+   * @returns 初始数据
    */
-  resetData(): void {
+  public resetData(): PlayerData {
     if (typeof window !== "undefined") {
       localStorage.removeItem(GameDataService.STORAGE_KEY);
     }
+    return this.getInitialData();
   }
 
   /**
