@@ -1,14 +1,4 @@
-// 修炼境界枚举
-export enum CultivationRealm {
-  QiRefining = "练气",
-  Foundation = "筑基",
-  CoreFormation = "结丹",
-  NascentSoul = "元婴",
-  SpiritSevering = "化神",
-  Void = "炼虚",
-  Integration = "合体",
-  Ascension = "大乘",
-}
+import { CultivationRealm, SkillRank } from "@/constants";
 
 // 功法类型
 export type SkillType =

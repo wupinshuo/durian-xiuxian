@@ -4,7 +4,7 @@ import React, { useState, useEffect } from "react";
 import Image from "next/image";
 import { useGameData } from "@/store/GameDataContext";
 import { FaPlay, FaStop, FaBolt, FaFlask } from "react-icons/fa";
-import { CultivationRealm, GameEvent } from "@/lib/types/game";
+import { GameEvent } from "@/lib/types/game";
 import { generateUUID } from "@/lib/utils";
 
 export default function CultivationPanel() {

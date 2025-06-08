@@ -3,94 +3,15 @@
  * 游戏核心类型定义
  */
 
-/** 境界等级 */
-export enum CultivationRealm {
-  /** 练气 */
-  QiRefining = "练气",
-  /** 筑基 */
-  Foundation = "筑基",
-  /** 结丹 */
-  CoreFormation = "结丹",
-  /** 元婴 */
-  NascentSoul = "元婴",
-  /** 化神 */
-  SpiritSevering = "化神",
-  /** 炼虚 */
-  Void = "炼虚",
-  /** 合体 */
-  Integration = "合体",
-  /** 大乘 */
-  Ascension = "大乘",
-}
-
-/** 境界层次 */
-export type RealmLevel = 1 | 2 | 3 | 4 | 5;
-
-/** 灵根类型 */
-export enum SpiritRootType {
-  /** 金灵根 */
-  Metal = "金",
-  /** 木灵根 */
-  Wood = "木",
-  /** 水灵根 */
-  Water = "水",
-  /** 火灵根 */
-  Fire = "火",
-  /** 土灵根 */
-  Earth = "土",
-  /** 雷灵根 */
-  Thunder = "雷",
-  /** 风灵根 */
-  Wind = "风",
-  /** 冰灵根 */
-  Ice = "冰",
-  /** 混合灵根 */
-  Mixed = "混合",
-  /** 混沌灵根 */
-  Chaos = "混沌",
-}
-
-/** 灵根资质 */
-export enum SpiritRootQuality {
-  /** 下等资质 */
-  Poor = "下等",
-  /** 中等资质 */
-  Common = "中等",
-  /** 上等资质 */
-  Good = "上等",
-  /** 极品资质 */
-  Excellent = "极品",
-  /** 天灵资质 */
-  Heavenly = "天灵",
-}
-
-/** 道行类型 */
-export enum CultivationPath {
-  /** 正道 */
-  Righteous = "正道",
-  /** 中立 */
-  Neutral = "中立",
-  /** 魔道 */
-  Evil = "魔道",
-}
-
-/** 功法品级 */
-export enum SkillRank {
-  /** 凡品 */
-  Mortal = "凡品",
-  /** 下品 */
-  Low = "下品",
-  /** 中品 */
-  Middle = "中品",
-  /** 上品 */
-  High = "上品",
-  /** 极品 */
-  Supreme = "极品",
-  /** 天级 */
-  Heavenly = "天级",
-  /** 仙级 */
-  Immortal = "仙级",
-}
+import {
+  CultivationRealm,
+  SpiritRootType,
+  SpiritRootQuality,
+  CultivationPath,
+  SkillRank,
+  ItemType,
+  RealmLevel,
+} from "@/constants";
 
 /** 角色基本属性 */
 export interface CharacterAttributes {
@@ -174,22 +95,6 @@ export interface SkillEffect {
   value: number;
   /** 效果描述 */
   description: string;
-}
-
-/** 物品类型 */
-export enum ItemType {
-  /** 丹药 */
-  Pill = "丹药",
-  /** 法器 */
-  Weapon = "法器",
-  /** 法宝 */
-  Artifact = "法宝",
-  /** 材料 */
-  Material = "材料",
-  /** 符箓 */
-  Talisman = "符箓",
-  /** 任务物品 */
-  Quest = "任务物品",
 }
 
 /** 物品 */

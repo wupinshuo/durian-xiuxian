@@ -3,15 +3,20 @@
 import React, { createContext, useContext, useState, useEffect } from "react";
 import { GameDataService } from "@/lib/services/gameDataService";
 import {
+  CultivationRealm,
+  MAX_REALM_LEVEL,
+  MAX_REALM_PROGRESS,
+  TRIBULATION_PROBABILITY,
+  ItemType,
+} from "@/constants";
+import {
   PlayerData,
   Character,
   Skill,
   Item,
   GameEvent,
-  CultivationRealm,
-  ItemType,
   ItemEffect,
-} from "@/lib/types/game";
+} from "@/types";
 import { generateUUID } from "@/lib/utils";
 
 // 上下文类型定义
@@ -60,8 +65,14 @@ function getNextRealm(currentRealm: CultivationRealm): CultivationRealm | null {
       return CultivationRealm.SpiritSevering;
     case CultivationRealm.SpiritSevering:
       return CultivationRealm.Void;
-    default:
+    case CultivationRealm.Void:
+      return CultivationRealm.Integration;
+    case CultivationRealm.Integration:
+      return CultivationRealm.Ascension;
+    case CultivationRealm.Ascension:
       return null; // 已达最高境界
+    default:
+      return null;
   }
 }
 
@@ -94,8 +105,8 @@ export function GameDataProvider({ children }: { children: React.ReactNode }) {
   const checkForRealmUpgrade = () => {
     if (!playerData) return false;
     return (
-      playerData.character.realmLevel >= 12 &&
-      playerData.character.realmProgress >= 100
+      playerData.character.realmLevel >= MAX_REALM_LEVEL &&
+      playerData.character.realmProgress >= MAX_REALM_PROGRESS
     );
   };
 
@@ -107,7 +118,7 @@ export function GameDataProvider({ children }: { children: React.ReactNode }) {
     if (!nextRealm) return false;
 
     // 随机决定是否遭遇天劫
-    const encounterTribulation = Math.random() < 0.05; // 5%几率遭遇天劫
+    const encounterTribulation = Math.random() * 100 < TRIBULATION_PROBABILITY; // 天劫几率
 
     if (encounterTribulation) {
       // 遭遇天劫
@@ -192,7 +203,7 @@ export function GameDataProvider({ children }: { children: React.ReactNode }) {
         ...prev,
         character: {
           ...prev.character,
-          realmProgress: Math.min(Math.max(0, progress), 100),
+          realmProgress: Math.min(Math.max(0, progress), MAX_REALM_PROGRESS),
         },
       };
     });
@@ -214,9 +225,12 @@ export function GameDataProvider({ children }: { children: React.ReactNode }) {
       }
 
       // 如果达到100%，且不是巅峰层级，自动升级层级
-      if (newProgress >= 100 && newRealmLevel < 12) {
+      if (
+        newProgress >= MAX_REALM_PROGRESS &&
+        newRealmLevel < MAX_REALM_LEVEL
+      ) {
         newRealmLevel += 1;
-        newProgress -= 100;
+        newProgress -= MAX_REALM_PROGRESS;
 
         // 升级事件
         const upgradeEvent: GameEvent = {
@@ -236,9 +250,9 @@ export function GameDataProvider({ children }: { children: React.ReactNode }) {
           },
           events: [upgradeEvent, ...prev.events],
         };
-      } else if (newProgress >= 100) {
+      } else if (newProgress >= MAX_REALM_PROGRESS) {
         // 达到巅峰，保持在100%
-        newProgress = 100;
+        newProgress = MAX_REALM_PROGRESS;
 
         // 提示事件
         const readyEvent: GameEvent = {
@@ -249,42 +263,24 @@ export function GameDataProvider({ children }: { children: React.ReactNode }) {
           timestamp: Date.now(),
         };
 
-        // 检查是否已有类似事件，避免重复
-        const hasReadyEvent = prev.events.some(
-          (e: GameEvent) =>
-            e.type === "cultivation" &&
-            e.title === "突破准备" &&
-            Date.now() - e.timestamp < 600000 // 10分钟内
-        );
-
-        if (hasReadyEvent) {
-          return {
-            ...prev,
-            character: {
-              ...prev.character,
-              realmProgress: newProgress,
-            },
-          };
-        } else {
-          return {
-            ...prev,
-            character: {
-              ...prev.character,
-              realmProgress: newProgress,
-            },
-            events: [readyEvent, ...prev.events],
-          };
-        }
-      } else {
-        // 普通进度增加
         return {
           ...prev,
           character: {
             ...prev.character,
             realmProgress: newProgress,
           },
+          events: [readyEvent, ...prev.events],
         };
       }
+
+      // 正常增加修为
+      return {
+        ...prev,
+        character: {
+          ...prev.character,
+          realmProgress: newProgress,
+        },
+      };
     });
   };
 

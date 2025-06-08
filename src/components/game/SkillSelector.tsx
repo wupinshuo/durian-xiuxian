@@ -2,8 +2,9 @@
 
 import React from "react";
 import { useGameData } from "@/store/GameDataContext";
-import { Skill, SkillType, SkillRarity } from "@/lib/types";
-import { Skill as GameSkill, SkillRank } from "@/lib/types/game";
+import { Skill as UISkill, SkillType, SkillRarity } from "@/types/skill";
+import { SkillRank } from "@/constants";
+import { Skill } from "@/types";
 import {
   FaFire,
   FaHandSparkles,
@@ -16,7 +17,7 @@ import {
 interface SkillSelectorProps {
   onSkillSelect?: (skillId: string) => void;
   selectedSkillId?: string | null;
-  skills?: Skill[] | GameSkill[];
+  skills?: Skill[] | UISkill[];
 }
 
 export default function SkillSelector({
@@ -30,11 +31,11 @@ export default function SkillSelector({
   const rawSkills = propSkills || contextSkills;
 
   // 检查是否为GameSkill类型并转换
-  const isGameSkill = (skill: Skill | GameSkill): skill is GameSkill =>
+  const isGameSkill = (skill: Skill | UISkill): skill is UISkill =>
     typeof skill === "object" && "rank" in skill;
 
   // 将GameSkill转换为UI需要的Skill类型
-  const convertGameSkill = (skill: GameSkill): Skill => {
+  const convertGameSkill = (skill: UISkill): Skill => {
     const convertRank = (rank: SkillRank): SkillRarity => {
       switch (rank) {
         case "凡品":

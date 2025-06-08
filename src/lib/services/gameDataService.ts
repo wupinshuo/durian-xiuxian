@@ -11,26 +11,31 @@ import {
   Skill,
   Item,
   GameEvent,
+  ItemEffect,
+} from "@/types";
+import { generateUUID } from "@/lib/utils";
+import {
   CultivationRealm,
   ItemType,
-  SpiritRootQuality,
+  SkillRank,
+  GAME_SETTINGS,
+  DEFAULT_CHARACTER,
+  MAX_REALM_PROGRESS,
   SpiritRootType,
+  SpiritRootQuality,
   CultivationPath,
   RealmLevel,
-  SkillRank,
-  ItemEffect,
-} from "@/lib/types/game";
-import { generateUUID } from "@/lib/utils";
+} from "@/constants";
 
 // 存储键
-const STORAGE_KEY = "durian_xiuxian_game_data";
+const STORAGE_KEY = GAME_SETTINGS.STORAGE_KEY;
 // 加密密钥，在实际应用中可以使用更复杂的密钥生成方法
 const ENCRYPTION_KEY = "durian_xiuxian_secret_key_2024";
 // 签名密钥
 const SIGNATURE_KEY = "durian_xiuxian_signature_2024";
 
 // 默认头像
-const DEFAULT_AVATAR = "/avatars/default.png";
+const DEFAULT_AVATAR = DEFAULT_CHARACTER.AVATAR;
 
 /**
  * 使用AES加密数据
@@ -245,56 +250,31 @@ export class GameDataService {
    */
   updateRealmProgress(progress: number): void {
     const data = this.getPlayerData();
-    data.character.realmProgress = Math.min(Math.max(0, progress), 100);
+    data.character.realmProgress = Math.min(
+      Math.max(0, progress),
+      MAX_REALM_PROGRESS
+    );
     this.savePlayerData(data);
   }
 
   /**
-   * 增加修为进度
+   * 增加玩家修为进度
    */
   addRealmProgress(amount: number): void {
     const data = this.getPlayerData();
-    data.character.realmProgress += amount;
 
-    // 如果达到100%，且当前不是巅峰层级，自动升级层级
-    if (data.character.realmProgress >= 100 && data.character.realmLevel < 12) {
-      data.character.realmLevel += 1;
-      data.character.realmProgress -= 100;
+    // 防止整数溢出
+    let newProgress = data.character.realmProgress + amount;
 
-      // 添加升级事件
-      const upgradeEvent: GameEvent = {
-        id: generateUUID(),
-        type: "cultivation",
-        title: "境界提升",
-        description: `修为积累满足，你的境界提升到了${data.character.realm}${data.character.realmLevel}层！`,
-        timestamp: Date.now(),
-      };
-
-      data.events.unshift(upgradeEvent);
-    } else if (data.character.realmProgress >= 100) {
-      // 如果是巅峰层级，保持在100%
-      data.character.realmProgress = 100;
-
-      // 添加提示事件
-      const readyEvent: GameEvent = {
-        id: generateUUID(),
-        type: "cultivation",
-        title: "突破准备",
-        description: `你已经达到${data.character.realm}${data.character.realmLevel}层巅峰，可以尝试突破到更高境界了！`,
-        timestamp: Date.now(),
-      };
-
-      // 避免重复事件
-      const hasReadyEvent = data.events.some(
-        (e) =>
-          e.type === "cultivation" &&
-          e.title === "突破准备" &&
-          Date.now() - e.timestamp < 3600000 // 1小时内
-      );
-
-      if (!hasReadyEvent) {
-        data.events.unshift(readyEvent);
-      }
+    if (newProgress <= 0) {
+      // 如果修为减少到0以下，则重置为0
+      data.character.realmProgress = 0;
+    } else if (newProgress >= MAX_REALM_PROGRESS) {
+      // 如果修为超过最大值，则设置为最大值
+      data.character.realmProgress = MAX_REALM_PROGRESS;
+    } else {
+      // 正常增加修为
+      data.character.realmProgress = newProgress;
     }
 
     this.savePlayerData(data);
@@ -599,13 +579,13 @@ export class GameDataService {
   private getInitialCharacter(): Character {
     return {
       id: generateUUID(),
-      name: "无名散修",
+      name: DEFAULT_CHARACTER.NAME,
       avatar: DEFAULT_AVATAR,
       realm: CultivationRealm.QiRefining, // 练气期
       realmLevel: 1,
       realmProgress: 0,
-      age: 16,
-      lifespan: 100,
+      age: DEFAULT_CHARACTER.AGE,
+      lifespan: DEFAULT_CHARACTER.LIFESPAN,
       attributes: {
         attack: 10,
         defense: 10,

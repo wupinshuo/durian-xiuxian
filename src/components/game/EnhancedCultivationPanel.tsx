@@ -7,6 +7,13 @@ import { FaPlay, FaStop, FaBolt, FaFlask, FaArrowUp } from "react-icons/fa";
 import { motion } from "framer-motion";
 import { Skill as GameSkill } from "@/lib/types/game";
 import { generateUUID } from "@/lib/utils";
+import { DEVIATION_MESSAGES, SUCCESS_MESSAGES } from "@/constants/text";
+import {
+  DEVIATION_PROBABILITY,
+  DEVIATION_PROGRESS,
+  NORMAL_PROGRESS,
+  SKILL_PROGRESS,
+} from "@/constants/cultivation";
 
 export default function EnhancedCultivationPanel() {
   const {
@@ -121,22 +128,17 @@ export default function EnhancedCultivationPanel() {
       const now = Date.now();
       if (now - lastUpdateTimeRef.current >= nextUpdateTimeRef.current) {
         // 随机判断是否走火入魔（5%概率）
-        const isDeviation = Math.random() < 0.05;
+        const isDeviation = Math.random() < DEVIATION_PROBABILITY * 0.01;
 
         if (isDeviation) {
           // 走火入魔，修为倒退，灵力受损，不能为负数，且不能超过100%
-          const decreaseAmount = -0.3;
+          const decreaseAmount = -DEVIATION_PROGRESS;
           addRealmProgress(decreaseAmount);
           // 更新本地状态，立即反映到UI
           setLocalRealmProgress((prev) => Math.max(0, prev + decreaseAmount));
 
           // 随机选择走火入魔的提示文案
-          const deviationMessages = [
-            "走火入魔！灵力运转失控，修为受损。",
-            "心境不稳，修炼出现偏差，修为倒退少许。",
-            "分心了，灵力运行错误，修为受损。",
-            "灵气暴动，丹田受损，修为倒退。",
-          ];
+          const deviationMessages = DEVIATION_MESSAGES;
           const message =
             deviationMessages[
               Math.floor(Math.random() * deviationMessages.length)
@@ -154,19 +156,14 @@ export default function EnhancedCultivationPanel() {
           });
         } else {
           // 正常修炼，增加修为进度
-          const progressAmount = 0.2;
+          const progressAmount = NORMAL_PROGRESS;
           addRealmProgress(progressAmount);
           // 更新本地状态，立即反映到UI
           setLocalRealmProgress((prev) => Math.min(100, prev + progressAmount));
 
           // 随机决定是否显示修炼反馈（30%概率）
           if (Math.random() < 0.3) {
-            const successMessages = [
-              "灵力运转顺畅，修为有所增长。",
-              "心境平和，修炼效果良好。",
-              "灵气吸收顺利，修为稳步提升。",
-              "感悟到了功法的一点奥妙，修炼速度加快。",
-            ];
+            const successMessages = SUCCESS_MESSAGES;
             const message =
               successMessages[
                 Math.floor(Math.random() * successMessages.length)
@@ -177,7 +174,7 @@ export default function EnhancedCultivationPanel() {
 
         // 无论是否走火入魔，功法修炼都有进度
         if (selectedSkillId) {
-          const skillProgressAmount = 0.3;
+          const skillProgressAmount = SKILL_PROGRESS;
           addSkillProgress(selectedSkillId, skillProgressAmount);
           // 更新本地技能进度状态
           setLocalSkillProgress((prev) =>

@@ -1,17 +1,19 @@
 import {
   Character,
   CharacterAttributes,
-  CultivationPath,
-  CultivationRealm,
   GameEvent,
   Item,
-  ItemType,
   PlayerData,
   Skill,
+} from "@/types";
+import {
+  CultivationPath,
+  CultivationRealm,
+  ItemType,
   SkillRank,
   SpiritRootQuality,
   SpiritRootType,
-} from "../types/game";
+} from "@/constants";
 import { v4 as uuidv4 } from "uuid";
 
 // 模拟角色属性
@@ -185,6 +187,7 @@ export const mockEvents: GameEvent[] = [
       {
         type: "realm_progress",
         value: 5,
+        description: "炼制丹药成功",
       },
     ],
   },
@@ -198,6 +201,7 @@ export const mockEvents: GameEvent[] = [
       {
         type: "currency",
         value: 15,
+        description: "击败妖兽",
       },
     ],
   },
@@ -209,9 +213,9 @@ export const mockEvents: GameEvent[] = [
     timestamp: Date.now() - 100800000, // 1天前多一点
     effects: [
       {
-        type: "skill_progress",
-        skillId: mockSkills[1].id,
+        type: "cultivation_speed",
         value: 10,
+        description: "《八荒剑诀》修炼速度增加10%",
       },
     ],
   },
