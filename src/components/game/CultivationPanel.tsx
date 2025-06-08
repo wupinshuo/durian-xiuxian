@@ -4,10 +4,11 @@ import React, { useState, useEffect, useRef } from "react";
 import Image from "next/image";
 import { useGameData } from "@/store/GameDataContext";
 import { FaPlay, FaStop, FaBolt, FaArrowUp } from "react-icons/fa";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import { Skill } from "@/types";
 import { uuidTool } from "@/tools/uuid";
 import { DEVIATION_MESSAGES, SUCCESS_MESSAGES } from "@/constants/text";
+import { gameDataService } from "@/lib/service-handle/game-data-service";
 import {
   DEVIATION_PROBABILITY,
   DEVIATION_PROGRESS,
@@ -29,6 +30,9 @@ export default function CultivationPanel() {
   const [isCultivating, setIsCultivating] = useState(false);
   const [selectedSkillId, setSelectedSkillId] = useState<string | null>(null);
   const [showBreakthroughEffect, setShowBreakthroughEffect] = useState(false);
+  const [breakthroughStatus, setBreakthroughStatus] = useState<
+    "loading" | "success" | "failed" | null
+  >(null);
   const [cultivationStatus, setCultivationStatus] = useState<string | null>(
     "开始修炼以提升修为，点击下方按钮"
   );
@@ -127,6 +131,30 @@ export default function CultivationPanel() {
     const intervalId = setInterval(() => {
       const now = Date.now();
       if (now - lastUpdateTimeRef.current >= nextUpdateTimeRef.current) {
+        // 如果已经达到突破条件，自动停止修炼
+        if (character.realmProgress >= 100 || checkForRealmUpgrade()) {
+          // 停止修炼
+          setIsCultivating(false);
+
+          // 显示提示
+          showCultivationStatus(
+            "修为已达到突破境界，自动停止修炼！",
+            "success"
+          );
+
+          // 添加突破提醒事件
+          addEvent({
+            id: uuidTool.generateUUID(),
+            type: "cultivation",
+            title: "修为圆满",
+            description: "你的修为已达到当前境界的巅峰，可尝试突破了！",
+            timestamp: Date.now(),
+          });
+
+          // 退出更新循环
+          return;
+        }
+
         // 随机判断是否走火入魔（5%概率）
         const isDeviation = Math.random() < DEVIATION_PROBABILITY * 0.01;
 
@@ -195,6 +223,8 @@ export default function CultivationPanel() {
     addSkillProgress,
     selectedSkillId,
     addEvent,
+    character.realmProgress,
+    checkForRealmUpgrade,
   ]);
 
   // 开始修炼
@@ -230,8 +260,11 @@ export default function CultivationPanel() {
 
     // 设置延迟恢复默认提示
     setTimeout(() => {
-      setCultivationStatus("开始修炼以提升修为，点击下方按钮");
-      setStatusType("info");
+      // 只有在未达到突破条件时，才显示默认提示
+      if (!checkForRealmUpgrade()) {
+        setCultivationStatus("开始修炼以提升修为，点击下方按钮");
+        setStatusType("info");
+      }
     }, 3500);
 
     addEvent({
@@ -267,18 +300,67 @@ export default function CultivationPanel() {
       return;
     }
 
-    // 显示突破特效
+    // 显示突破特效和加载状态
     setShowBreakthroughEffect(true);
+    setBreakthroughStatus("loading");
+    showCultivationStatus("正在渡劫，电闪雷鸣...", "warning");
 
-    // 尝试突破
+    // 突破有5%的失败率
+    const isFailure = Math.random() < 0.05;
+
+    // 尝试突破（模拟加载过程）
     setTimeout(() => {
-      upgradeRealm();
+      if (isFailure) {
+        // 突破失败
+        setBreakthroughStatus("failed");
+        showCultivationStatus("突破失败，遭遇天劫，修为受损！", "error");
 
-      // 3秒后隐藏特效
-      setTimeout(() => {
-        setShowBreakthroughEffect(false);
-      }, 3000);
-    }, 2000);
+        addEvent({
+          id: uuidTool.generateUUID(),
+          type: "breakthrough",
+          title: "突破失败",
+          description: "天劫降临，灵气紊乱，修为受损，吐血不止。需闭关调养。",
+          timestamp: Date.now(),
+        });
+
+        // 突破失败，修为减少10%
+        addRealmProgress(-10);
+
+        // 4秒后隐藏特效，重置状态
+        setTimeout(() => {
+          setShowBreakthroughEffect(false);
+          setBreakthroughStatus(null);
+          setCultivationStatus("开始修炼以提升修为，点击下方按钮");
+          setStatusType("info");
+        }, 4000);
+      } else {
+        // 突破成功
+        setBreakthroughStatus("success");
+        showCultivationStatus("突破成功！金光环绕，祥瑞降临！", "success");
+
+        upgradeRealm();
+
+        addEvent({
+          id: uuidTool.generateUUID(),
+          type: "breakthrough",
+          title: "突破成功",
+          description: `成功突破至${
+            character.realm === "练气"
+              ? "筑基"
+              : character.realm === "筑基"
+              ? "结丹"
+              : "更高境界"
+          }，祥瑞环绕，天地感应！`,
+          timestamp: Date.now(),
+        });
+
+        // 4秒后隐藏特效，重置状态
+        setTimeout(() => {
+          setShowBreakthroughEffect(false);
+          setBreakthroughStatus(null);
+        }, 4000);
+      }
+    }, 4000); // 增加渡劫时间
   };
 
   // 使用丹药
@@ -310,23 +392,256 @@ export default function CultivationPanel() {
     <div className="bg-gray-800 p-4 rounded-lg relative overflow-hidden">
       {/* 突破特效 */}
       {showBreakthroughEffect && (
-        <motion.div
-          className="absolute inset-0 bg-gradient-to-r from-purple-500 to-blue-500 opacity-50 z-10"
-          initial={{ opacity: 0 }}
-          animate={{ opacity: [0, 0.7, 0] }}
-          transition={{ duration: 5, times: [0, 0.3, 1] }}
-        >
-          <div className="absolute inset-0 flex items-center justify-center">
+        <div className="absolute inset-0 z-10 overflow-hidden">
+          {/* 背景效果 */}
+          <motion.div
+            className={`absolute inset-0 ${
+              breakthroughStatus === "loading"
+                ? "bg-gradient-to-b from-gray-900 to-purple-900"
+                : breakthroughStatus === "success"
+                ? "bg-gradient-to-b from-blue-900 to-yellow-500"
+                : breakthroughStatus === "failed"
+                ? "bg-gradient-to-b from-gray-900 to-red-900"
+                : "bg-gradient-to-r from-purple-500 to-blue-500"
+            } opacity-75`}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 0.75 }}
+            transition={{ duration: 0.5 }}
+          />
+
+          {/* 闪电效果 - 仅在加载和失败时显示 */}
+          {(breakthroughStatus === "loading" ||
+            breakthroughStatus === "failed") && (
+            <>
+              <AnimatePresence>
+                {[...Array(5)].map((_, i) => (
+                  <motion.div
+                    key={`lightning-${i}`}
+                    className="absolute inset-0"
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: [0, 0.8, 0] }}
+                    transition={{
+                      duration: 0.3,
+                      delay: i * 0.7 + Math.random() * 0.5,
+                      repeat: breakthroughStatus === "loading" ? Infinity : 3,
+                      repeatDelay: Math.random() * 2,
+                    }}
+                  >
+                    <div
+                      className="w-full h-full bg-white"
+                      style={{
+                        clipPath: `polygon(${Math.random() * 100}% 0%, ${
+                          Math.random() * 100
+                        }% ${Math.random() * 100}%, ${Math.random() * 100}% ${
+                          Math.random() * 100
+                        }%, ${Math.random() * 100}% 100%)`,
+                      }}
+                    />
+                  </motion.div>
+                ))}
+              </AnimatePresence>
+
+              {/* 雷鸣云效果 */}
+              <div className="absolute inset-0 flex items-start justify-center">
+                <motion.div
+                  className="w-full h-20 bg-gray-800 opacity-70 mt-10 rounded-full"
+                  animate={{
+                    scale: [1, 1.05, 0.98, 1.02, 1],
+                    y: [0, -5, 2, -3, 0],
+                  }}
+                  transition={{
+                    duration: 3,
+                    repeat: Infinity,
+                    repeatType: "reverse",
+                  }}
+                />
+              </div>
+            </>
+          )}
+
+          {/* 金光效果 - 仅在成功时显示 */}
+          {breakthroughStatus === "success" && (
+            <>
+              {/* 放射光芒 */}
+              <div className="absolute inset-0 flex items-center justify-center">
+                <motion.div
+                  className="w-80 h-80 rounded-full bg-gradient-to-r from-yellow-300 to-yellow-500"
+                  initial={{ opacity: 0, scale: 0 }}
+                  animate={{ opacity: [0, 1, 0.7], scale: [0, 1, 1.5] }}
+                  transition={{ duration: 3, times: [0, 0.3, 1] }}
+                />
+              </div>
+
+              {/* 飘动的金色粒子 */}
+              {[...Array(30)].map((_, i) => (
+                <motion.div
+                  key={`particle-${i}`}
+                  className="absolute rounded-full bg-yellow-300"
+                  style={{
+                    width: Math.random() * 6 + 2,
+                    height: Math.random() * 6 + 2,
+                    left: `${Math.random() * 80 + 10}%`,
+                    top: `${Math.random() * 80 + 10}%`,
+                  }}
+                  initial={{ opacity: 0, y: 50 }}
+                  animate={{
+                    opacity: [0, 1, 0],
+                    y: [50, -50 - Math.random() * 100],
+                    x: [0, (Math.random() - 0.5) * 100],
+                  }}
+                  transition={{
+                    duration: Math.random() * 2 + 2,
+                    delay: Math.random() * 1,
+                    repeat: 1,
+                    repeatType: "reverse",
+                  }}
+                />
+              ))}
+            </>
+          )}
+
+          {/* 吐血效果 - 仅在失败时显示 */}
+          {breakthroughStatus === "failed" && (
+            <div className="absolute inset-0 flex items-center justify-center">
+              <motion.div
+                className="relative"
+                initial={{ opacity: 0, scale: 0.8 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={{ duration: 0.5, delay: 0.5 }}
+              >
+                {/* 吐血效果 */}
+                <motion.div
+                  className="absolute w-40 h-20 bg-red-600 rounded-full blur-md"
+                  style={{
+                    top: "30%",
+                    left: "50%",
+                    transform: "translate(-50%, -50%)",
+                  }}
+                  initial={{ opacity: 0, scale: 0 }}
+                  animate={{
+                    opacity: [0, 0.7, 0],
+                    scaleX: [0, 1.5, 2],
+                    scaleY: [0, 1, 0.5],
+                  }}
+                  transition={{ duration: 1, delay: 1.2 }}
+                />
+
+                {/* 血滴 */}
+                {[...Array(8)].map((_, i) => (
+                  <motion.div
+                    key={`blood-${i}`}
+                    className="absolute w-2 h-2 rounded-full bg-red-600"
+                    style={{
+                      top: "30%",
+                      left: "50%",
+                    }}
+                    initial={{ opacity: 0 }}
+                    animate={{
+                      opacity: [0, 1, 0],
+                      x: [
+                        (Math.random() - 0.5) * 20,
+                        (Math.random() - 0.5) * 60,
+                      ],
+                      y: [0, 50 + Math.random() * 30],
+                    }}
+                    transition={{
+                      duration: 0.8,
+                      delay: 1.2 + Math.random() * 0.3,
+                    }}
+                  />
+                ))}
+              </motion.div>
+            </div>
+          )}
+
+          {/* 中央文字内容 */}
+          <div className="absolute inset-0 flex items-center justify-center z-20">
             <motion.div
               initial={{ scale: 0 }}
-              animate={{ scale: [0, 1.5, 0] }}
-              transition={{ duration: 5, times: [0, 0.3, 1] }}
-              className="text-white text-4xl font-bold"
+              animate={{
+                scale:
+                  breakthroughStatus === "loading"
+                    ? [0.8, 1.2, 0.8]
+                    : [0, 1.5, breakthroughStatus === "failed" ? 0.5 : 0],
+              }}
+              transition={{
+                duration: breakthroughStatus === "loading" ? 2 : 5,
+                times:
+                  breakthroughStatus === "loading" ? [0, 0.5, 1] : [0, 0.3, 1],
+                repeat: breakthroughStatus === "loading" ? Infinity : 0,
+              }}
+              className={`text-white text-4xl font-bold p-6 rounded-full ${
+                breakthroughStatus === "loading"
+                  ? "bg-purple-900 bg-opacity-50 shadow-lg shadow-purple-500"
+                  : breakthroughStatus === "success"
+                  ? "bg-yellow-600 bg-opacity-30 shadow-lg shadow-yellow-300"
+                  : breakthroughStatus === "failed"
+                  ? "bg-red-900 bg-opacity-50 shadow-lg shadow-red-500"
+                  : ""
+              } backdrop-blur-sm`}
             >
-              突破中...
+              {breakthroughStatus === "loading" ? (
+                <div className="flex items-center">
+                  <span className="mr-3 text-blue-100">渡劫中</span>
+                  <div className="flex space-x-1">
+                    <motion.div
+                      className="w-2 h-2 bg-white rounded-full"
+                      animate={{ y: [0, -4, 0] }}
+                      transition={{ duration: 0.6, repeat: Infinity, delay: 0 }}
+                    />
+                    <motion.div
+                      className="w-2 h-2 bg-white rounded-full"
+                      animate={{ y: [0, -4, 0] }}
+                      transition={{
+                        duration: 0.6,
+                        repeat: Infinity,
+                        delay: 0.2,
+                      }}
+                    />
+                    <motion.div
+                      className="w-2 h-2 bg-white rounded-full"
+                      animate={{ y: [0, -4, 0] }}
+                      transition={{
+                        duration: 0.6,
+                        repeat: Infinity,
+                        delay: 0.4,
+                      }}
+                    />
+                  </div>
+                </div>
+              ) : breakthroughStatus === "success" ? (
+                <div className="flex items-center text-yellow-100">
+                  <span>突破成功</span>
+                  <motion.div
+                    className="ml-3 text-yellow-300"
+                    initial={{ rotate: -45, opacity: 0 }}
+                    animate={{ rotate: 0, opacity: 1 }}
+                  >
+                    ✓
+                  </motion.div>
+                </div>
+              ) : breakthroughStatus === "failed" ? (
+                <div className="flex items-center text-red-100">
+                  <motion.span
+                    animate={{ x: [0, -2, 3, -2, 0] }}
+                    transition={{ duration: 0.5, delay: 1 }}
+                  >
+                    突破失败
+                  </motion.span>
+                  <motion.div
+                    className="ml-3 text-red-300"
+                    initial={{ rotate: 45, opacity: 0 }}
+                    animate={{ rotate: 0, opacity: 1 }}
+                  >
+                    ✗
+                  </motion.div>
+                </div>
+              ) : (
+                "突破中..."
+              )}
             </motion.div>
           </div>
-        </motion.div>
+        </div>
       )}
 
       {/* 修炼状态反馈 - 使用固定高度容器避免布局变化 */}
@@ -500,10 +815,10 @@ export default function CultivationPanel() {
             </button>
 
             <button
-              className={`px-3 py-1 rounded-md text-sm flex items-center ${
+              className={`px-3 py-1 rounded-md text-sm flex items-center transition-colors duration-200 ${
                 !isCultivating
                   ? "bg-gray-600 cursor-not-allowed"
-                  : "bg-gray-600 hover:bg-gray-700"
+                  : "bg-red-600 hover:bg-red-700 active:bg-red-800"
               }`}
               onClick={stopCultivation}
               disabled={!isCultivating}
@@ -532,18 +847,36 @@ export default function CultivationPanel() {
           </>
         ) : (
           <button
-            className="bg-yellow-600 hover:bg-yellow-700 px-5 py-2 rounded-md text-base flex-grow flex items-center justify-center font-bold"
+            className={`px-5 py-2 rounded-md text-base flex-grow flex items-center justify-center font-bold ${
+              showBreakthroughEffect
+                ? "bg-gray-600 cursor-not-allowed"
+                : "bg-yellow-600 hover:bg-yellow-700"
+            }`}
             onClick={attemptBreakthrough}
+            disabled={showBreakthroughEffect}
           >
-            <FaArrowUp className="mr-2" />
-            <span>
-              尝试突破 {character.realm} →{" "}
-              {character.realm === "练气"
-                ? "筑基"
-                : character.realm === "筑基"
-                ? "结丹"
-                : "更高境界"}
-            </span>
+            {showBreakthroughEffect ? (
+              <>
+                <motion.div
+                  animate={{ rotate: 360 }}
+                  transition={{
+                    duration: 1.5,
+                    repeat: Infinity,
+                    ease: "linear",
+                  }}
+                  className="mr-2 w-5 h-5 border-2 border-t-transparent border-white rounded-full"
+                />
+                <span>突破中...</span>
+              </>
+            ) : (
+              <>
+                <FaArrowUp className="mr-2" />
+                <span>
+                  尝试突破 {character.realm} →{" "}
+                  {gameDataService.getNextRealm(character.realm)}
+                </span>
+              </>
+            )}
           </button>
         )}
       </div>

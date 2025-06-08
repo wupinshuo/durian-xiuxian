@@ -101,7 +101,7 @@ export default function CharacterEditor() {
         <div className="relative">
           <div
             className={`relative w-16 h-16 ${
-              isEditing ? "cursor-pointer" : ""
+              isEditing ? "cursor-pointer group" : ""
             }`}
             onClick={() =>
               isEditing && setShowAvatarSelector(!showAvatarSelector)
@@ -112,13 +112,20 @@ export default function CharacterEditor() {
               alt="角色头像"
               fill
               className={`rounded-full object-cover border-2 ${
-                isEditing ? "border-blue-500" : "border-gray-700"
+                isEditing
+                  ? "border-blue-500 ring-2 ring-blue-300 ring-opacity-50"
+                  : "border-gray-700"
               } transition-all duration-300`}
             />
             {isEditing && (
-              <div className="absolute inset-0 bg-black bg-opacity-50 rounded-full flex items-center justify-center">
-                <FaEdit className="text-white text-xl" />
-              </div>
+              <>
+                <div className="absolute bottom-0 right-0 bg-blue-500 bg-opacity-90 p-1 rounded-full w-6 h-6 flex items-center justify-center">
+                  <FaEdit className="text-white text-xs" />
+                </div>
+                <div className="absolute -top-8 left-1/2 transform -translate-x-1/2 bg-gray-900 text-white text-xs py-1 px-2 rounded opacity-0 group-hover:opacity-100 transition-opacity duration-200 whitespace-nowrap">
+                  点击修改头像
+                </div>
+              </>
             )}
           </div>
           <div className="absolute bottom-0 right-0 w-3 h-3 bg-green-500 border-2 border-gray-800 rounded-full"></div>
@@ -196,7 +203,11 @@ export default function CharacterEditor() {
             </div>
           ) : (
             <button
-              onClick={() => setIsEditing(true)}
+              onClick={() => {
+                setIsEditing(true);
+                // 确保使用当前头像
+                setSelectedAvatar(character.avatar || "/avatars/default.png");
+              }}
               className="bg-blue-600 hover:bg-blue-700 text-white px-3 py-1 rounded text-sm flex items-center"
             >
               <FaEdit className="mr-1" />
@@ -209,7 +220,7 @@ export default function CharacterEditor() {
       {/* 头像选择器弹出框 */}
       {isEditing && showAvatarSelector && (
         <div className="absolute top-20 left-0 z-10 bg-gray-800 border border-gray-700 rounded-md p-3 shadow-lg">
-          <div className="flex justify-between items-center mb-2">
+          <div className="flex justify-between items-center mb-3">
             <h4 className="text-sm font-bold text-gray-300">选择头像</h4>
             {previewMode && (
               <button
@@ -220,13 +231,26 @@ export default function CharacterEditor() {
               </button>
             )}
           </div>
-          <div className="grid grid-cols-3 gap-2">
+
+          {/* 当前选中的头像预览 */}
+          <div className="mb-3 flex justify-center">
+            <div className="relative w-20 h-20 rounded-full overflow-hidden border-2 border-blue-500">
+              <Image
+                src={selectedAvatar}
+                alt="当前选择的头像"
+                fill
+                className="object-cover"
+              />
+            </div>
+          </div>
+
+          <div className="grid grid-cols-3 gap-3">
             {AVAILABLE_AVATARS.map((avatar, index) => (
               <div
                 key={index}
-                className={`relative w-14 h-14 cursor-pointer rounded-full overflow-hidden border-2 ${
+                className={`relative w-16 h-16 cursor-pointer rounded-full overflow-hidden border-2 ${
                   selectedAvatar === avatar
-                    ? "border-blue-500 scale-105"
+                    ? "border-blue-500 scale-110"
                     : "border-transparent"
                 } hover:border-blue-400 transition-all duration-200`}
                 onClick={() => handleSelectAvatar(avatar)}
