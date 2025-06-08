@@ -1,3 +1,27 @@
 {
+  // 其他已有的设置...
+  // 保存时自动格式化文件
+  // 指定使用 Prettier 作为默认的格式化工具
+  "[typescript]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode", // Prettier 扩展的 ID
+    "editor.formatOnSave": true
+  },
+  "[typescriptreact]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode",
+    "editor.formatOnSave": true
+  },
+  "[javascript]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode",
+    "editor.formatOnSave": true
+  },
+  "[javascriptreact]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode",
+    "editor.formatOnSave": true
+  },
+  "[json]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode",
+    "editor.formatOnSave": true
+  },
+  "typescript.tsdk": "node_modules/typescript/lib",
   "cSpell.words": ["opennextjs", "stackable", "xiulian"]
 }

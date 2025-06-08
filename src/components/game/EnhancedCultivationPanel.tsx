@@ -5,7 +5,7 @@ import Image from "next/image";
 import { useGameData } from "@/store/GameDataContext";
 import { FaPlay, FaStop, FaBolt, FaFlask, FaArrowUp } from "react-icons/fa";
 import { motion } from "framer-motion";
-import { Skill as GameSkill } from "@/lib/types/game";
+import { Skill } from "@/types";
 import { generateUUID } from "@/lib/utils";
 import { DEVIATION_MESSAGES, SUCCESS_MESSAGES } from "@/constants/text";
 import {
@@ -86,7 +86,7 @@ export default function EnhancedCultivationPanel() {
   useEffect(() => {
     if (skills.length > 0 && !selectedSkillId) {
       const cultivationSkill =
-        skills.find((s: GameSkill) => s.type === "cultivation") || skills[0];
+        skills.find((s: Skill) => s.type === "cultivation") || skills[0];
       setSelectedSkillId(cultivationSkill.id);
     }
   }, [skills, selectedSkillId]);
@@ -102,7 +102,7 @@ export default function EnhancedCultivationPanel() {
 
   // 当前选中的功法
   const selectedSkill = skills?.find(
-    (skill: GameSkill) => skill.id === selectedSkillId
+    (skill: Skill) => skill.id === selectedSkillId
   );
 
   // 计算修炼效率（这里简化处理）

@@ -6,51 +6,16 @@ import SkillSelector from "@/components/game/SkillSelector";
 import CharacterEditor from "@/components/game/CharacterEditor";
 import { useGameData } from "@/store/GameDataContext";
 import { FaInfoCircle, FaExclamationTriangle } from "react-icons/fa";
-import { Skill as UISkill, SkillRarity, SkillType } from "@/lib/types";
-import { Skill as GameSkill, SkillEffect } from "@/lib/types/game";
+import { Skill, UISkill } from "@/types";
+import { convertToUISkill } from "@/lib/utils/typeConverters";
 
 export default function CultivationPage() {
   const { skills } = useGameData();
 
   // 将游戏系统中的技能转换为UI组件需要的技能类型
-  const enhancedSkills: UISkill[] = skills.map((skill: GameSkill) => {
-    // 转换effects从SkillEffect[]到{[key: string]: number}
-    const convertedEffects: { [key: string]: number } = {};
-    // console.log(skill.effects);
-    if (skill.effects) {
-      skill.effects.forEach((effect: SkillEffect) => {
-        convertedEffects[effect.type] = effect.value;
-      });
-    }
-
-    return {
-      id: skill.id,
-      name: skill.name,
-      description: skill.description,
-      type: (skill.type === "auxiliary" ||
-      skill.type === "combat" ||
-      skill.type === "cultivation"
-        ? skill.type
-        : "auxiliary") as SkillType, // 确保type是UISkill支持的类型
-      rarity: (skill.rank === "凡品"
-        ? "common"
-        : skill.rank === "下品"
-        ? "uncommon"
-        : skill.rank === "中品"
-        ? "rare"
-        : skill.rank === "上品"
-        ? "epic"
-        : skill.rank === "极品"
-        ? "legendary"
-        : "mythic") as SkillRarity,
-      level: skill.level,
-      progress: skill.progress,
-      maxLevel: 9,
-      effects: convertedEffects, // 使用转换后的effects
-      learningDifficulty: 50, // 默认中等难度
-      unlocked: true,
-    };
-  });
+  const enhancedSkills: UISkill[] = skills.map((skill: Skill) =>
+    convertToUISkill(skill)
+  );
 
   return (
     <div className="space-y-6">

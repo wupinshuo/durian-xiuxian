@@ -2,7 +2,7 @@
 
 import React from "react";
 import { useGameData } from "@/store/GameDataContext";
-import { Skill } from "@/lib/types/game";
+import { Skill } from "@/types";
 
 interface SkillListProps {
   limit?: number;

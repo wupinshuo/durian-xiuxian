@@ -36,6 +36,33 @@ export interface Skill {
   effects: SkillEffect[];
 }
 
+/** UI组件使用的技能类型 */
+export interface UISkill {
+  id: string;
+  /** 功法名称 */
+  name: string;
+  /** 功法描述 */
+  description: string;
+  /** 功法类型 */
+  type: SkillType;
+  /** 功法品级（使用旧版字符串枚举） */
+  rarity: SkillRarity;
+  /** 功法等级 */
+  level: number;
+  /** 最大可修炼层级 */
+  maxLevel: number;
+  /** 修炼进度（0-100%） */
+  progress: number;
+  /** 功法效果（使用对象格式） */
+  effects: {
+    [key: string]: number;
+  };
+  /** 学习难度 */
+  learningDifficulty: number;
+  /** 是否已解锁 */
+  unlocked: boolean;
+}
+
 /** 功法类型 */
 export type SkillType =
   | "cultivation" // 修炼功法

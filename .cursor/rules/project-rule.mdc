@@ -52,6 +52,7 @@ alwaysApply: true
 
 - src/constants 全局定义的常量都写到这个文件夹下面
 - src/types 全局定义的类型都写到这个文件夹下面
+- src/tools 工具类函数放在这个文件夹下面
 
 ## TypeScript使用
 - 始终使用严格类型检查。

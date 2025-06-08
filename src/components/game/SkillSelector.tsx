@@ -2,9 +2,8 @@
 
 import React from "react";
 import { useGameData } from "@/store/GameDataContext";
-import { Skill as UISkill, SkillType, SkillRarity } from "@/types/skill";
-import { SkillRank } from "@/constants";
-import { Skill } from "@/types";
+import { UISkill, SkillType, SkillRarity } from "@/types";
+import { convertToUISkill } from "@/lib/utils/typeConverters";
 import {
   FaFire,
   FaHandSparkles,
@@ -17,7 +16,7 @@ import {
 interface SkillSelectorProps {
   onSkillSelect?: (skillId: string) => void;
   selectedSkillId?: string | null;
-  skills?: Skill[] | UISkill[];
+  skills?: UISkill[];
 }
 
 export default function SkillSelector({
@@ -28,60 +27,14 @@ export default function SkillSelector({
   const { skills: contextSkills } = useGameData();
 
   // 使用传入的skills或从上下文获取
-  const rawSkills = propSkills || contextSkills;
+  const skills = propSkills || convertContextSkills();
 
-  // 检查是否为GameSkill类型并转换
-  const isGameSkill = (skill: Skill | UISkill): skill is UISkill =>
-    typeof skill === "object" && "rank" in skill;
+  // 转换上下文中的技能到UISkill格式
+  function convertContextSkills(): UISkill[] {
+    if (!contextSkills) return [];
 
-  // 将GameSkill转换为UI需要的Skill类型
-  const convertGameSkill = (skill: UISkill): Skill => {
-    const convertRank = (rank: SkillRank): SkillRarity => {
-      switch (rank) {
-        case "凡品":
-          return "common";
-        case "下品":
-          return "uncommon";
-        case "中品":
-          return "rare";
-        case "上品":
-          return "epic";
-        case "极品":
-          return "legendary";
-        case "天级":
-        case "仙级":
-        default:
-          return "mythic";
-      }
-    };
-
-    // 转换effects
-    const effectsObj: { [key: string]: number } = {};
-    if (skill.effects && Array.isArray(skill.effects)) {
-      skill.effects.forEach((effect) => {
-        effectsObj[effect.type] = effect.value;
-      });
-    }
-
-    return {
-      id: skill.id,
-      name: skill.name,
-      description: skill.description,
-      type: skill.type as SkillType,
-      rarity: convertRank(skill.rank),
-      level: skill.level,
-      progress: skill.progress,
-      maxLevel: 9, // 默认值
-      effects: effectsObj,
-      learningDifficulty: 50, // 默认值
-      unlocked: true, // 默认值
-    };
-  };
-
-  // 确保所有技能都是UI所需的Skill类型
-  const skills = rawSkills.map((skill) =>
-    isGameSkill(skill) ? convertGameSkill(skill) : skill
-  );
+    return contextSkills.map((skill) => convertToUISkill(skill));
+  }
 
   // 根据功法类型获取图标
   const getSkillIcon = (type: SkillType): React.ReactNode => {
