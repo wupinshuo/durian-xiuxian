@@ -1,7 +1,7 @@
 "use client";
 
 import React from "react";
-import EnhancedCultivationPanel from "@/components/game/EnhancedCultivationPanel";
+import CultivationPanel from "@/components/game/CultivationPanel";
 import SkillSelector from "@/components/game/SkillSelector";
 import CharacterEditor from "@/components/game/CharacterEditor";
 import { useGameData } from "@/store/GameDataContext";
@@ -27,7 +27,7 @@ export default function CultivationPage() {
       </div>
 
       {/* 修炼面板 */}
-      <EnhancedCultivationPanel />
+      <CultivationPanel />
 
       {/* 功法选择 */}
       <div className="bg-gray-800 p-4 rounded-lg">

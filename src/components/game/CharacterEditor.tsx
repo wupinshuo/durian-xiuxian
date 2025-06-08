@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from "react";
 import Image from "next/image";
 import { useGameData } from "@/store/GameDataContext";
-import { FaEdit, FaSave, FaTimes, FaUndo } from "react-icons/fa";
+import { FaEdit, FaSave, FaTimes, FaUndo, FaCheck } from "react-icons/fa";
 
 // 可用头像列表
 const AVAILABLE_AVATARS = [
@@ -167,17 +167,21 @@ export default function CharacterEditor() {
               <div className="flex space-x-2">
                 <button
                   onClick={handleSave}
-                  className="bg-green-600 hover:bg-green-700 text-white p-2 rounded"
-                  title="保存"
+                  className="bg-green-600 hover:bg-green-700 text-white p-2 rounded group relative"
                 >
                   <FaSave />
+                  <span className="absolute -top-8 left-1/2 transform -translate-x-1/2 bg-gray-900 text-white text-xs py-1 px-2 rounded opacity-0 group-hover:opacity-100 transition-opacity duration-200 whitespace-nowrap">
+                    保存修改
+                  </span>
                 </button>
                 <button
                   onClick={handleCancel}
-                  className="bg-red-600 hover:bg-red-700 text-white p-2 rounded"
-                  title="取消"
+                  className="bg-red-600 hover:bg-red-700 text-white p-2 rounded group relative"
                 >
                   <FaTimes />
+                  <span className="absolute -top-8 left-1/2 transform -translate-x-1/2 bg-gray-900 text-white text-xs py-1 px-2 rounded opacity-0 group-hover:opacity-100 transition-opacity duration-200 whitespace-nowrap">
+                    取消修改
+                  </span>
                 </button>
               </div>
               <label className="flex items-center text-xs text-gray-300 cursor-pointer">
@@ -233,6 +237,13 @@ export default function CharacterEditor() {
                   fill
                   className="object-cover"
                 />
+                {selectedAvatar === avatar && (
+                  <div className="absolute inset-0 bg-blue-500 bg-opacity-20 flex items-center justify-center">
+                    <div className="bg-blue-500 text-white rounded-full p-1">
+                      <FaCheck size={10} />
+                    </div>
+                  </div>
+                )}
               </div>
             ))}
           </div>
