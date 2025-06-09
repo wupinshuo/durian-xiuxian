@@ -23,5 +23,5 @@
     "editor.formatOnSave": true
   },
   "typescript.tsdk": "node_modules/typescript/lib",
-  "cSpell.words": ["opennextjs", "stackable", "xiulian"]
+  "cSpell.words": ["opennextjs", "stackable", "weibo", "xiulian"]
 }

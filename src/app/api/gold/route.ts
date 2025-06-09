@@ -1,13 +1,14 @@
 import { NextRequest, NextResponse } from "next/server";
+import axios from "axios";
 
-export async function GET(request: NextRequest) {
+export async function POST(request: NextRequest) {
   try {
     // 后台url
     const url = process.env.BASE_URL as string;
     console.info("url:", url);
-    const response = await fetch(url);
-    const data = await response.json();
-    console.info(data?.data);
+    const req = await axios.post(url, { type: "weibo" });
+    const data = req.data;
+    console.info(data?.data?.list);
     return NextResponse.json({
       status: 200,
       data: data?.data,
@@ -18,7 +19,7 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({
       status: 500,
       data: "error",
-      message: "error" + error,
+      message: "error",
     });
   }
 }
