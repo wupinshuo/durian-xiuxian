@@ -5,6 +5,7 @@ import CharacterCard from "@/components/game/CharacterCard";
 import CharacterDetails from "@/components/game/CharacterDetails";
 import SkillList from "@/components/game/SkillList";
 import EventList from "@/components/game/EventList";
+import axios from "axios";
 
 export default function HomePage() {
   const [apiResult, setApiResult] = useState<string | null>(null);
@@ -12,8 +13,8 @@ export default function HomePage() {
   // 测试API的函数
   const testApi = async (url = "hello") => {
     try {
-      const response = await fetch(`/api/${url}`);
-      const data = await response.json();
+      const response = await axios.post(`/api/${url}`, { type: "weibo" });
+      const data = response.data;
       alert(`API测试成功: ${JSON.stringify(data)}`);
     } catch (error) {
       alert(`API测试失败: ${error}`);
