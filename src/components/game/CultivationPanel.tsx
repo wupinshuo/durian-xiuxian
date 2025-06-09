@@ -197,6 +197,15 @@ export default function CultivationPanel() {
                 Math.floor(Math.random() * successMessages.length)
               ];
             showCultivationStatus(message, "success");
+
+            // 添加修炼事件
+            addEvent({
+              id: uuidTool.generateUUID(),
+              type: "cultivation",
+              title: "修炼成功",
+              description: message,
+              timestamp: Date.now(),
+            });
           }
         }
 

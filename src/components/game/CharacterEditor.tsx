@@ -156,7 +156,7 @@ export default function CharacterEditor() {
               )}
             </div>
           ) : (
-            <h3 className="text-xl font-bold">玩家名号: {character.name}</h3>
+            <h3 className="text-xl font-bold">名称: {character.name}</h3>
           )}
 
           <div className="flex items-center">
@@ -167,7 +167,7 @@ export default function CharacterEditor() {
           </div>
         </div>
 
-        {/* 编辑/保存按钮 */}
+        {/* 编辑/保存按钮区域 */}
         <div className="ml-auto">
           {isEditing ? (
             <div className="flex flex-col space-y-2">

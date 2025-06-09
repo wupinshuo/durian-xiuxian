@@ -22,7 +22,7 @@ export default function CharacterCard() {
           <div className="absolute bottom-0 right-0 w-3 h-3 bg-green-500 border-2 border-gray-800 rounded-full"></div>
         </div>
         <div>
-          <h3 className="text-xl font-bold">玩家名号: {character.name}</h3>
+          <h3 className="text-xl font-bold">名称: {character.name}</h3>
           <div className="flex items-center">
             <span className="text-yellow-400 mr-2">
               境界: {character.realm}
