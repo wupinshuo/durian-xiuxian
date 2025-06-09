@@ -11,13 +11,14 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({
       status: 200,
       data: data?.data,
-      message: "Hello, world!",
+      message: "success",
     });
   } catch (error) {
+    console.error("error:", error);
     return NextResponse.json({
       status: 500,
       data: "error",
-      message: "Hello, world!",
+      message: "error" + error,
     });
   }
 }
