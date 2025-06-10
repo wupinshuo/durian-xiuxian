@@ -11,11 +11,17 @@ export default function HomePage() {
   const [apiResult, setApiResult] = useState<string | null>(null);
 
   // 测试API的函数
-  const testApi = async (url = "hello") => {
+  const testApi = async (url = "gold") => {
     try {
-      const response = await axios.post(`/api/${url}`, { type: "weibo" });
-      const data = response.data;
-      alert(`API测试成功: ${JSON.stringify(data)}`);
+      if (url === "gold") {
+        const response = await axios.get(`/api/${url}`);
+        const data = response.data;
+        alert(`API测试成功: ${JSON.stringify(data)}`);
+      } else {
+        const response = await axios.post(`/api/${url}`, { type: "weibo" });
+        const data = response.data;
+        alert(`API测试成功: ${JSON.stringify(data)}`);
+      }
     } catch (error) {
       alert(`API测试失败: ${error}`);
     }
@@ -43,18 +49,18 @@ export default function HomePage() {
 
       {/* 临时API测试按钮 - 完成测试后删除 */}
       <button
-        onClick={() => testApi("hello")}
+        onClick={() => testApi("gold")}
         className="fixed bottom-4 right-4 bg-blue-500 hover:bg-blue-600 text-white text-xs py-1 px-2 rounded-full opacity-50 hover:opacity-100"
         title="测试API"
       >
-        测试hello
+        测试gold
       </button>
       <button
-        onClick={() => testApi("gold")}
+        onClick={() => testApi("hot")}
         className="fixed bottom-4 right-20 bg-blue-500 hover:bg-blue-600 text-white text-xs py-1 px-2 rounded-full opacity-50 hover:opacity-100"
         title="测试API"
       >
-        测试服务
+        测试hot
       </button>
     </div>
   );

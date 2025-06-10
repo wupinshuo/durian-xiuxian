@@ -1,16 +1,15 @@
 import { NextRequest, NextResponse } from "next/server";
 import axios from "axios";
 
-export async function GET(request: NextRequest) {
+export async function POST(request: NextRequest) {
   try {
-    // const { searchParams } = new URL(request.url);
     // 后台url
-    const url = process.env.BASE_URL + "/gold-price";
+    const url = process.env.BASE_URL + "/hot-list";
     console.info("url:", url);
-    const req = await axios.get(url);
+    const req = await axios.post(url, { type: "weibo" });
     const data = req.data;
     console.info("data:", data);
-    console.info("list:", data?.data);
+    console.info("list:", data?.data?.list);
     return NextResponse.json({
       status: 200,
       data: data?.data,
@@ -21,7 +20,7 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({
       status: 500,
       data: "error",
-      message: "Hello, world!",
+      message: "error",
     });
   }
 }
