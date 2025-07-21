@@ -79,7 +79,6 @@ alwaysApply: true
 - 不要懒惰：为所有请求的功能编写完整且功能性的代码。
 - 为所有函数和组件提供JSDoc注释。
 - 为所有组件包含PropTypes验证。
-- 使用Jest和React Testing Library编写单元测试，至少达到80%覆盖率。
 - 为UI组件使用快照测试。
 - 实现全局错误边界进行错误处理。
 - 为异步操作使用try/catch块。
